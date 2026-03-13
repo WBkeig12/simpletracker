@@ -1,0 +1,2589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simple Tracker</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Simple Tracker">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="description" content="Simple Tracker — a free, no-account macro tracker. Log calories, protein, fat, carbs, fiber and sugar against your daily goals.">
+
+<!-- Open Graph / Discord embed -->
+<meta property="og:type"        content="website">
+<meta property="og:title"       content="Simple Tracker">
+<meta property="og:description" content="Track your macros. Simply. Free, no account, works on any device.">
+<meta property="og:image"       content="og-image.png">
+<meta property="og:url"         content=".">
+<meta name="twitter:card"       content="summary_large_image">
+<meta name="twitter:title"      content="Simple Tracker">
+<meta name="twitter:description" content="Track your macros. Simply. Free, no account, works on any device.">
+<meta name="twitter:image"      content="og-image.png">
+
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon.ico">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@300;400;500&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #0f0f0f;
+  --layer:   #171717;
+  --card:    #1e1e1e;
+  --border:  #2b2b2b;
+  --border2: #3a3a3a;
+  --text:    #f0efed;
+  --text2:   #888480;
+  --text3:   #4d4b48;
+  --accent:  #f0efed;
+  --cal:     #f97316;
+  --pro:     #38bdf8;
+  --fat:     #facc15;
+  --carb:    #4ade80;
+  --fiber:   #c084fc;
+  --sugar:   #f472b6;
+  --danger:  #f87171;
+  --r:       7px;
+  --max:     560px;
+}
+
+/* ─── LIGHT THEME ───────────────────────────── */
+body.light {
+  --bg:      #f5f4f2;
+  --layer:   #eceae7;
+  --card:    #ffffff;
+  --border:  #dedad5;
+  --border2: #ccc8c2;
+  --text:    #1a1917;
+  --text2:   #6b6762;
+  --text3:   #b0ada8;
+  --cal:     #ea6a00;
+  --pro:     #0ea5e9;
+  --fat:     #d97706;
+  --carb:    #16a34a;
+  --fiber:   #9333ea;
+  --sugar:   #db2777;
+  --danger:  #dc2626;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+/* ─── TOPBAR ────────────────────────────────── */
+.topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 52px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 200;
+}
+
+.topbar-brand {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--text);
+  cursor: pointer;
+  letter-spacing: -0.01em;
+  user-select: none;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.theme-btn {
+  width: 36px; height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: background 0.15s;
+  padding: 0;
+}
+.theme-btn:hover { background: var(--card); }
+
+.theme-icon {
+  font-size: 1rem;
+  line-height: 1;
+  transition: transform 0.3s ease;
+  color: var(--text);
+}
+.theme-btn:hover .theme-icon { transform: rotate(20deg); }
+
+/* ─── HAMBURGER ─────────────────────────────── */
+.burger {
+  width: 36px; height: 36px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-radius: var(--r);
+  padding: 0 7px;
+  transition: background 0.15s;
+}
+.burger:hover { background: var(--card); }
+.burger span {
+  display: block;
+  height: 1.5px;
+  background: var(--text);
+  border-radius: 1px;
+  transition: transform 0.22s ease, opacity 0.22s ease, width 0.22s ease;
+}
+.burger span:nth-child(3) { width: 60%; }
+.burger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+.burger.open span:nth-child(2) { opacity: 0; }
+.burger.open span:nth-child(3) { width: 100%; transform: translateY(-6.5px) rotate(-45deg); }
+
+/* ─── DRAWER ────────────────────────────────── */
+.drawer {
+  position: fixed;
+  top: 52px; right: 0;
+  width: 220px;
+  background: var(--layer);
+  border-left: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  border-radius: 0 0 0 12px;
+  z-index: 199;
+  transform: translateX(110%);
+  transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: -8px 16px 40px rgba(0,0,0,0.4);
+}
+.drawer.open { transform: translateX(0); }
+
+.drawer-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text2);
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: color 0.12s, background 0.12s;
+  user-select: none;
+}
+.drawer-link:last-child { border-bottom: none; }
+.drawer-link:hover { color: var(--text); background: var(--card); }
+.drawer-link.active { color: var(--text); }
+.drawer-link .arr { font-size: 0.55rem; opacity: 0.3; }
+
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 198;
+}
+.overlay.open { display: block; }
+
+/* ─── PAGES ─────────────────────────────────── */
+.page {
+  display: none;
+  padding-top: 52px;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+.page.active { display: block; }
+#page-home.active { display: flex; flex-direction: column; }
+
+/* ─── PAGE GRADIENT BLOBS ───────────────────── */
+/* Each non-home page gets two ambient gradient orbs */
+.page-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.07;
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform;
+  transition: opacity 0.3s;
+}
+body.light .page-blob { opacity: 0.10; }
+
+.page-blob-a {
+  width: 420px; height: 420px;
+  top: -60px; left: -100px;
+}
+.page-blob-b {
+  width: 360px; height: 360px;
+  bottom: 80px; right: -80px;
+}
+
+/* Per-page blob colours */
+#page-tracker .page-blob-a { background: var(--cal); }
+#page-tracker .page-blob-b { background: var(--pro); }
+
+#page-about .page-blob-a   { background: var(--pro); }
+#page-about .page-blob-b   { background: var(--fiber); }
+
+#page-export .page-blob-a  { background: var(--carb); }
+#page-export .page-blob-b  { background: var(--cal); }
+
+#page-resources .page-blob-a { background: var(--sugar); }
+#page-resources .page-blob-b { background: var(--fat); }
+
+#page-install .page-blob-a { background: var(--fiber); }
+#page-install .page-blob-b { background: var(--pro); }
+
+#page-impressum .page-blob-a { background: var(--text2); }
+#page-impressum .page-blob-b { background: var(--text3); }
+
+/* Keep all inner content above blobs */
+.page .inner,
+.page .h-hero,
+.page .h-stats,
+.page .h-features,
+.page .h-bottom {
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── SHARED INNER ──────────────────────────── */
+.inner {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 40px 20px 80px;
+  width: 100%;
+}
+
+/* ─── STAR CANVAS ───────────────────────────── */
+#starCanvas {
+  position: absolute;
+  top: 52px;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+#page-home {
+  position: relative;
+  overflow: hidden;
+}
+
+/* push all home content above the canvas */
+#page-home > *:not(#starCanvas) {
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── HOME ──────────────────────────────────── */
+
+/* Hero */
+.h-hero {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 52px 20px 0;
+  width: 100%;
+}
+
+.h-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 24px;
+  animation: fadeUp 0.6s ease both;
+}
+
+.h-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: pulse 2s ease infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.8); }
+}
+
+.h-headline {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: clamp(3.2rem, 13vw, 5.6rem);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  color: var(--text);
+  margin-bottom: 24px;
+  animation: fadeUp 0.6s 0.1s ease both;
+}
+
+.h-hl {
+  color: var(--cal);
+  position: relative;
+}
+
+.h-sub {
+  font-size: 0.82rem;
+  color: var(--text2);
+  line-height: 1.85;
+  max-width: 380px;
+  margin-bottom: 32px;
+  animation: fadeUp 0.6s 0.2s ease both;
+}
+
+.h-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 48px;
+  animation: fadeUp 0.6s 0.3s ease both;
+}
+
+.h-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--text);
+  color: var(--bg);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 13px 24px;
+  border-radius: var(--r);
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.12s;
+}
+.h-cta:hover  { opacity: 0.88; transform: translateY(-1px); }
+.h-cta:active { transform: translateY(0); }
+
+.h-ghost {
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 13px 20px;
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.h-ghost:hover { border-color: var(--text2); color: var(--text); }
+
+/* Live preview card */
+.h-preview {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 0;
+  animation: fadeUp 0.6s 0.35s ease both;
+}
+
+.h-preview-label {
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 16px;
+}
+
+.h-bars { display: flex; flex-direction: column; gap: 10px; }
+
+.h-bar-row { display: flex; align-items: center; gap: 10px; }
+
+.h-bar-lbl {
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  width: 48px;
+  flex-shrink: 0;
+}
+
+.h-bar-track {
+  flex: 1;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.h-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  width: 0;
+  transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+.h-bar-pct {
+  font-size: 0.58rem;
+  color: var(--text3);
+  min-width: 32px;
+  text-align: right;
+}
+
+.h-preview-foot {
+  font-size: 0.58rem;
+  color: var(--text3);
+  margin-top: 14px;
+  letter-spacing: 0.04em;
+}
+
+/* Stats row */
+.h-stats {
+  max-width: var(--max);
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 24px;
+  animation: fadeUp 0.6s 0.45s ease both;
+}
+
+.h-stat {
+  flex: 1;
+  padding: 22px 8px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.h-stat-num {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: clamp(0.75rem, 2.5vw, 1.5rem);
+  letter-spacing: -0.02em;
+  color: var(--text);
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  writing-mode: horizontal-tb;
+  text-orientation: mixed;
+}
+
+.h-stat-lbl {
+  font-size: clamp(0.42rem, 1.2vw, 0.55rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  writing-mode: horizontal-tb;
+}
+
+.h-stat-div {
+  width: 1px;
+  height: 40px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+/* Features grid */
+.h-features {
+  max-width: var(--max);
+  margin: 24px auto 0;
+  width: 100%;
+  padding: 0 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  animation: fadeUp 0.6s 0.5s ease both;
+}
+
+.h-feat {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  transition: border-color 0.2s;
+}
+.h-feat:hover { border-color: var(--border2); }
+
+.h-feat-icon {
+  font-size: 1.4rem;
+  margin-bottom: 12px;
+  line-height: 1;
+}
+
+.h-feat-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.h-feat-body {
+  font-size: 0.7rem;
+  color: var(--text2);
+  line-height: 1.7;
+}
+
+/* Bottom CTA */
+.h-bottom {
+  max-width: var(--max);
+  margin: 24px auto 64px;
+  width: 100%;
+  padding: 32px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  animation: fadeUp 0.6s 0.55s ease both;
+}
+
+.h-bottom-text {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.2rem, 4vw, 1.8rem);
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile home */
+@media (max-width: 480px) {
+  .h-hero { padding: 36px 16px 0; }
+  .h-actions { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .h-cta, .h-ghost { width: 100%; justify-content: center; }
+  .h-stats { margin: 16px 16px 0; width: auto; padding: 0; }
+  .h-stat { padding: 14px 4px; }
+  .h-stat-num { font-size: clamp(0.65rem, 3.5vw, 1rem); }
+  .h-stat-lbl { font-size: 0.38rem; letter-spacing: 0.06em; }
+  .h-features { padding: 0 16px; grid-template-columns: 1fr; margin-top: 16px; }
+  .h-bottom {
+    margin: 16px 12px 48px;
+    flex-direction: column;
+    gap: 14px;
+    text-align: center;
+    padding: 22px 16px;
+    box-sizing: border-box;
+    width: calc(100% - 24px);
+    max-width: 100%;
+  }
+  .h-bottom-text { font-size: 1.2rem; }
+  .h-bottom .h-cta { width: 100%; justify-content: center; box-sizing: border-box; }
+}
+
+/* ─── PAGE HEADING ──────────────────────────── */
+.page-heading { margin-bottom: 28px; }
+.page-heading .eyebrow { margin-bottom: 8px; }
+.page-heading h2 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.9rem, 6vw, 2.8rem);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--text);
+}
+
+/* ─── GOALS GRID ────────────────────────────── */
+.goals-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+
+.goal-cell {
+  background: var(--card);
+  padding: 12px 14px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.goal-cell:nth-child(3n)        { border-right: none; }
+.goal-cell:nth-last-child(-n+3) { border-bottom: none; }
+
+.goal-lbl {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.54rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--text2);
+}
+
+.swatch {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.goal-input-row { display: flex; align-items: baseline; gap: 4px; }
+
+.goal-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border2);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.92rem;
+  width: 58px;
+  outline: none;
+  padding: 1px 0 2px;
+  transition: border-color 0.15s;
+}
+.goal-input:focus { border-color: var(--text2); }
+.goal-unit { font-size: 0.54rem; color: var(--text3); }
+
+/* ─── BARS ──────────────────────────────────── */
+.bars-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bar-row { display: flex; align-items: center; gap: 10px; }
+
+.bar-lbl {
+  font-size: 0.58rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  width: 52px;
+  flex-shrink: 0;
+}
+
+.bar-track {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.45s cubic-bezier(0.4,0,0.2,1);
+}
+.bar-fill.cal   { background: var(--cal); }
+.bar-fill.pro   { background: var(--pro); }
+.bar-fill.fat   { background: var(--fat); }
+.bar-fill.carb  { background: var(--carb); }
+.bar-fill.fiber { background: var(--fiber); }
+.bar-fill.sugar { background: var(--sugar); }
+
+.bar-vals {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  min-width: 96px;
+  justify-content: flex-end;
+}
+
+.bar-cur { font-size: 0.8rem; font-weight: 500; }
+.bar-cur.cal   { color: var(--cal); }
+.bar-cur.pro   { color: var(--pro); }
+.bar-cur.fat   { color: var(--fat); }
+.bar-cur.carb  { color: var(--carb); }
+.bar-cur.fiber { color: var(--fiber); }
+.bar-cur.sugar { color: var(--sugar); }
+
+/* Over-limit: calories, fat, sugar turn red */
+.bar-cur.over-limit  { color: var(--danger) !important; }
+.bar-fill.over-limit { background: var(--danger) !important; }
+.bar-row.over-limit .bar-lbl { color: var(--danger) !important; }
+
+.bar-sep  { font-size: 0.56rem; color: var(--text3); margin: 0 2px; }
+.bar-goal { font-size: 0.68rem; color: var(--text2); }
+.bar-unit { font-size: 0.52rem; color: var(--text3); margin-left: 2px; }
+
+/* ─── ADD CARD ──────────────────────────────── */
+.add-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
+}
+
+.card-lbl {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+.row1 {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.field { display: flex; flex-direction: column; gap: 4px; }
+
+.field label {
+  font-size: 0.52rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+
+.field input {
+  background: var(--layer);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.85rem;
+  padding: 7px 10px;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+.field input:focus       { border-color: var(--border2); }
+.field input::placeholder { color: var(--text3); }
+
+.add-btn {
+  width: 100%;
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  border-radius: 5px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 10px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: opacity 0.15s;
+}
+.add-btn:hover  { opacity: 0.88; }
+.add-btn:active { opacity: 1; }
+
+/* ─── ENTRIES ───────────────────────────────── */
+.entries-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.entries-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.entry {
+  background: var(--card);
+  padding: 11px 14px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 5px 10px;
+  border-bottom: 1px solid var(--border);
+  animation: fadeUp 0.18s ease;
+}
+.entry:last-child { border-bottom: none; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.entry-name {
+  font-size: 0.8rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.entry-pills {
+  grid-column: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 3px;
+}
+
+.pill {
+  font-size: 0.58rem;
+  padding: 1px 6px;
+  border-radius: 3px;
+  border: 1px solid var(--border2);
+  background: var(--layer);
+}
+.pill.cal   { color: var(--cal); }
+.pill.pro   { color: var(--pro); }
+.pill.fat   { color: var(--fat); }
+.pill.carb  { color: var(--carb); }
+.pill.fiber { color: var(--fiber); }
+.pill.sugar { color: var(--sugar); }
+
+.del-btn {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  align-self: center;
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 3px 5px;
+  border-radius: 4px;
+  transition: color 0.12s, background 0.12s;
+}
+.del-btn:hover { color: var(--danger); background: rgba(248,113,113,0.08); }
+
+.empty-state {
+  background: var(--card);
+  text-align: center;
+  padding: 30px;
+  font-size: 0.7rem;
+  color: var(--text3);
+  letter-spacing: 0.06em;
+}
+
+.reset-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.reset-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text3);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.reset-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+/* ─── ABOUT / IMPRESSUM ─────────────────────── */
+.about-body p {
+  font-size: 0.77rem;
+  line-height: 1.85;
+  color: var(--text2);
+  margin-bottom: 8px;
+}
+
+.section-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin: 24px 0 10px;
+}
+.section-title:first-child { margin-top: 0; }
+
+.macro-list {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.macro-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 13px 16px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+.macro-row:last-child { border-bottom: none; }
+
+.macro-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.macro-name {
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.macro-desc {
+  font-size: 0.7rem;
+  color: var(--text2);
+  line-height: 1.6;
+}
+
+/* ─── INSTALL ───────────────────────────────── */
+.install-intro {
+  font-size: 0.77rem;
+  color: var(--text2);
+  line-height: 1.8;
+  margin-top: 6px;
+  margin-bottom: 28px;
+}
+
+.accordion {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.acc-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--card);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.12s;
+}
+.acc-head:hover { background: var(--layer); }
+
+.acc-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  flex: 1;
+}
+
+.acc-tag {
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  color: var(--text2);
+}
+
+.acc-chev {
+  font-size: 0.55rem;
+  color: var(--text3);
+  transition: transform 0.2s;
+}
+.accordion.open .acc-chev { transform: rotate(180deg); }
+
+.acc-body {
+  display: none;
+  padding: 0 18px 18px;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+}
+.accordion.open .acc-body { display: block; }
+
+.steps { display: flex; flex-direction: column; gap: 10px; padding-top: 16px; }
+.step  { display: flex; gap: 14px; }
+
+.step-n {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: var(--text3);
+  min-width: 16px;
+  flex-shrink: 0;
+  line-height: 1.6;
+}
+
+.step-t {
+  font-size: 0.74rem;
+  line-height: 1.75;
+  color: var(--text2);
+}
+.step-t b { color: var(--text); font-weight: 500; }
+
+.install-note {
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: var(--layer);
+  border-left: 2px solid var(--border2);
+  border-radius: 0 5px 5px 0;
+  font-size: 0.68rem;
+  color: var(--text2);
+  line-height: 1.65;
+}
+
+/* ─── MOBILE ────────────────────────────────── */
+@media (max-width: 480px) {
+  .field input,
+  .goal-input { font-size: 16px; }
+
+  .row1 { grid-template-columns: 1fr 1fr; }
+  .row1 .field:first-child { grid-column: 1 / -1; }
+
+  .goals-grid { grid-template-columns: 1fr 1fr; }
+  .goal-cell:nth-child(3n)        { border-right: 1px solid var(--border); }
+  .goal-cell:nth-child(2n)        { border-right: none; }
+  .goal-cell:nth-last-child(-n+3) { border-bottom: 1px solid var(--border); }
+  .goal-cell:nth-last-child(-n+2) { border-bottom: none; }
+
+  .del-btn   { padding: 8px 10px; font-size: 1rem; }
+  .reset-btn { padding: 10px 16px; font-size: 0.65rem; }
+  .add-btn   { padding: 13px; font-size: 0.75rem; }
+
+  .inner     { padding: 28px 16px 80px; }
+
+  .bar-lbl  { width: 44px; font-size: 0.55rem; }
+  .bar-vals { min-width: 80px; }
+  .bar-cur  { font-size: 0.75rem; }
+
+  .acc-tag  { display: none; }
+}
+
+/* ─── PAGE TRANSITIONS ──────────────────────── */
+.page {
+  animation: none;
+}
+.page.active {
+  animation: pageIn 0.3s cubic-bezier(0.4,0,0.2,1) both;
+}
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Staggered children animation */
+.anim-child {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.anim-child.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ─── EXPORT PAGE ───────────────────────────── */
+.exp-summary {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.exp-sum-item {
+  flex: 1;
+  min-width: 0;
+  padding: 16px 8px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.exp-sum-div {
+  width: 1px;
+  background: var(--border);
+  flex-shrink: 0;
+  align-self: stretch;
+}
+
+.exp-sum-lbl {
+  font-size: 0.52rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.exp-sum-num {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: clamp(1rem, 5vw, 1.5rem);
+  letter-spacing: -0.03em;
+  color: var(--cal);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.exp-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.exp-btn {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s, transform 0.12s;
+  width: 100%;
+}
+.exp-btn:hover  { border-color: var(--border2); background: var(--layer); transform: translateY(-1px); }
+.exp-btn:active { transform: translateY(0); }
+
+.exp-btn-primary { border-color: var(--text); }
+.exp-btn-primary:hover { border-color: var(--text); background: rgba(240,239,237,0.06); }
+
+.exp-btn-icon {
+  font-size: 1.4rem;
+  color: var(--text2);
+  flex-shrink: 0;
+  width: 32px;
+  text-align: center;
+  line-height: 1;
+}
+.exp-btn-primary .exp-btn-icon { color: var(--text); }
+
+.exp-btn-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--text);
+  margin-bottom: 3px;
+  letter-spacing: -0.01em;
+}
+
+.exp-btn-sub {
+  font-size: 0.65rem;
+  color: var(--text2);
+}
+
+.exp-tutorials { margin-bottom: 28px; }
+
+.exp-note {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin-bottom: 40px;
+}
+
+.exp-note-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  color: var(--text);
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+
+.exp-note p {
+  font-size: 0.72rem;
+  color: var(--text2);
+  line-height: 1.75;
+  margin: 0;
+}
+
+/* Download success flash */
+.exp-btn.success {
+  border-color: var(--carb) !important;
+}
+.exp-btn.success .exp-btn-icon { color: var(--carb); }
+
+@media (max-width: 480px) {
+  .h-stat-div { display: none; }
+}
+
+/* ─── RESOURCES PAGE ────────────────────────── */
+.res-intro {
+  font-size: 0.77rem;
+  color: var(--text2);
+  line-height: 1.8;
+  margin-bottom: 18px;
+  margin-top: -10px;
+}
+
+/* Recipe cards */
+.res-recipes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.res-recipe {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  transition: border-color 0.2s;
+}
+.res-recipe:hover { border-color: var(--border2); }
+
+.res-recipe-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.res-recipe-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.res-recipe-tag {
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.res-recipe-macros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.res-mac {
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  background: var(--layer);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+
+.res-recipe-body {
+  font-size: 0.72rem;
+  color: var(--text2);
+  line-height: 1.8;
+}
+.res-recipe-body b { color: var(--text); font-weight: 500; }
+
+/* Website links */
+.res-links {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.res-cat-label {
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 8px;
+}
+
+.res-link {
+  display: block;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  text-decoration: none;
+  margin-bottom: 8px;
+  transition: border-color 0.15s, background 0.15s, transform 0.12s;
+}
+.res-link:hover {
+  border-color: var(--border2);
+  background: var(--layer);
+  transform: translateX(3px);
+}
+
+.res-link-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+
+.res-ext {
+  font-size: 0.65rem;
+  color: var(--text3);
+  font-family: 'DM Mono', monospace;
+  font-weight: 400;
+}
+
+.res-link-desc {
+  font-size: 0.68rem;
+  color: var(--text2);
+  line-height: 1.65;
+}
+
+@media (max-width: 480px) {
+  .res-recipe-head { flex-direction: column; gap: 4px; }
+  .res-recipe { padding: 14px 16px; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand" onclick="showPage('home')">Simple Tracker</div>
+  <div class="topbar-right">
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle light/dark mode">
+      <span class="theme-icon" id="themeIcon">☀</span>
+    </button>
+    <button class="burger" id="burger" onclick="toggleMenu()" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</div>
+
+<!-- DRAWER -->
+<div class="drawer" id="drawer">
+  <div class="drawer-link active" id="nav-home"      onclick="showPage('home')">Home <span class="arr">&#9654;</span></div>
+  <div class="drawer-link"        id="nav-tracker"  onclick="showPage('tracker')">Tracker <span class="arr">&#9654;</span></div>
+  <div class="drawer-link"        id="nav-about"    onclick="showPage('about')">About <span class="arr">&#9654;</span></div>
+  <div class="drawer-link"        id="nav-export"   onclick="showPage('export')">Export Data <span class="arr">&#9654;</span></div>
+  <div class="drawer-link"        id="nav-resources" onclick="showPage('resources')">Resources <span class="arr">&#9654;</span></div>
+  <div class="drawer-link"        id="nav-install"  onclick="showPage('install')">Install as App <span class="arr">&#9654;</span></div>
+  <div class="drawer-link"        id="nav-impressum" onclick="showPage('impressum')">Impressum <span class="arr">&#9654;</span></div>
+</div>
+<div class="overlay" id="overlay" onclick="closeMenu()"></div>
+
+<!-- ════════════════════════════════════════
+     HOME
+════════════════════════════════════════ -->
+<div class="page active" id="page-home">
+
+  <!-- STAR CANVAS -->
+  <canvas id="starCanvas"></canvas>
+
+  <!-- HERO -->
+  <div class="h-hero">
+    <div class="h-hero-inner">
+      <div class="h-eyebrow">
+        <span class="h-dot" style="background:var(--cal)"></span>
+        Free &nbsp;·&nbsp; No account &nbsp;·&nbsp; Works on any device
+      </div>
+      <h1 class="h-headline">
+        Track your<br>macros.<br><span class="h-hl">Simply.</span>
+      </h1>
+      <p class="h-sub">Log calories, protein, fat, carbs, fiber and sugar against your daily goals. Clean, fast, no clutter.</p>
+      <div class="h-actions">
+        <button class="h-cta" onclick="showPage('tracker')">Start Tracking &nbsp;&#8594;</button>
+        <button class="h-ghost" onclick="showPage('about')">Learn more</button>
+      </div>
+    </div>
+
+    <!-- LIVE PREVIEW CARD -->
+    <div class="h-preview">
+      <div class="h-preview-label">Today's progress</div>
+      <div class="h-bars" id="homeBars"></div>
+      <div class="h-preview-foot">Updates live as you log entries</div>
+    </div>
+  </div>
+
+  <!-- STATS ROW -->
+  <div class="h-stats">
+    <div class="h-stat">
+      <div class="h-stat-num">6</div>
+      <div class="h-stat-lbl">Macros tracked</div>
+    </div>
+    <div class="h-stat-div"></div>
+    <div class="h-stat">
+      <div class="h-stat-num">100%</div>
+      <div class="h-stat-lbl">Free forever</div>
+    </div>
+    <div class="h-stat-div"></div>
+    <div class="h-stat">
+      <div class="h-stat-num">0</div>
+      <div class="h-stat-lbl">Accounts needed</div>
+    </div>
+    <div class="h-stat-div"></div>
+    <div class="h-stat">
+      <div class="h-stat-num">Unlimited</div>
+      <div class="h-stat-lbl">Daily entries</div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="h-features">
+    <div class="h-feat">
+      <div class="h-feat-icon" style="color:var(--cal)">◈</div>
+      <div class="h-feat-title">All 6 macros</div>
+      <div class="h-feat-body">Calories, protein, fat, carbs, fiber and sugar — tracked together with color-coded progress bars.</div>
+    </div>
+    <div class="h-feat">
+      <div class="h-feat-icon" style="color:var(--pro)">◎</div>
+      <div class="h-feat-title">Your goals</div>
+      <div class="h-feat-body">Set custom daily targets for every macro. Tap any number to edit — changes save instantly.</div>
+    </div>
+    <div class="h-feat">
+      <div class="h-feat-icon" style="color:var(--carb)">◉</div>
+      <div class="h-feat-title">Private by default</div>
+      <div class="h-feat-body">Everything stays in your browser. Nothing is sent to any server. No sign-up, no tracking, no ads.</div>
+    </div>
+    <div class="h-feat">
+      <div class="h-feat-icon" style="color:var(--fiber)">⬡</div>
+      <div class="h-feat-title">Installable</div>
+      <div class="h-feat-body">Add to your home screen on iOS, Android, or desktop. Opens like a native app, no app store needed.</div>
+    </div>
+  </div>
+
+  <!-- BOTTOM CTA -->
+  <div class="h-bottom">
+    <div class="h-bottom-text">Ready to start?</div>
+    <button class="h-cta" onclick="showPage('tracker')">Open Tracker &nbsp;&#8594;</button>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════
+     TRACKER
+════════════════════════════════════════ -->
+<div class="page" id="page-tracker">
+  <div class="page-blob page-blob-a"></div>
+  <div class="page-blob page-blob-b"></div>
+  <div class="inner">
+    <div style="margin-bottom:24px;" class="anim-child">
+      <div class="eyebrow" id="dateLabel"></div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(1.6rem,5vw,2.2rem);letter-spacing:-0.03em;color:var(--text);line-height:1.1;">Today's Log</div>
+    </div>
+
+    <div class="goals-grid anim-child" id="goalsGrid"></div>
+    <div class="bars-card anim-child"  id="barsSection"></div>
+
+    <div class="add-card anim-child">
+      <div class="card-lbl">Add Entry</div>
+      <div class="row1">
+        <div class="field">
+          <label>Name</label>
+          <input type="text" id="inName" placeholder="e.g. Lunch" maxlength="40">
+        </div>
+        <div class="field">
+          <label>Calories</label>
+          <input type="number" id="inCal" placeholder="0" min="0">
+        </div>
+        <div class="field">
+          <label>Protein g</label>
+          <input type="number" id="inPro" placeholder="0" min="0">
+        </div>
+        <div class="field">
+          <label>Fat g</label>
+          <input type="number" id="inFat" placeholder="0" min="0">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Carbs g</label>
+          <input type="number" id="inCarb" placeholder="0" min="0">
+        </div>
+        <div class="field">
+          <label>Fiber g</label>
+          <input type="number" id="inFiber" placeholder="0" min="0">
+        </div>
+        <div class="field">
+          <label>Sugar g</label>
+          <input type="number" id="inSugar" placeholder="0" min="0">
+        </div>
+      </div>
+      <button class="add-btn" onclick="addEntry()">Add Entry</button>
+    </div>
+
+    <div class="entries-title anim-child">Entries</div>
+    <div class="entries-list anim-child" id="entries"></div>
+
+    <div class="reset-row anim-child">
+      <button class="reset-btn" onclick="resetDay()">Reset Today</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     ABOUT
+════════════════════════════════════════ -->
+<div class="page" id="page-about">
+  <div class="page-blob page-blob-a"></div>
+  <div class="page-blob page-blob-b"></div>
+  <div class="inner">
+    <div class="page-heading anim-child">
+      <div class="eyebrow">Documentation</div>
+      <h2>About</h2>
+    </div>
+
+    <div class="about-body anim-child">
+      <div class="section-title">What it is</div>
+      <p>Simple Tracker is a free nutrition logger that runs in your browser. No account required, nothing stored on any server, no ads. Log meals and track six key macros against your personal daily goals.</p>
+
+      <div class="section-title">How to use it</div>
+      <p>Set your daily targets in the goal fields at the top of the tracker — tap any number and type to change it. Fill in the entry form with whatever values you have, then hit Add Entry. You only need to fill in the macros you care about. Entries persist automatically. Hit Reset Today to start fresh.</p>
+
+      <div class="section-title">What it tracks</div>
+      <div class="macro-list">
+        <div class="macro-row">
+          <div class="macro-dot" style="background:var(--cal)"></div>
+          <div>
+            <div class="macro-name">Calories</div>
+            <div class="macro-desc">Total energy intake — the baseline for any nutrition goal.</div>
+          </div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-dot" style="background:var(--pro)"></div>
+          <div>
+            <div class="macro-name">Protein</div>
+            <div class="macro-desc">Essential for muscle repair and satiety. A common guide is 1.6–2.2g per kg of bodyweight for active people.</div>
+          </div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-dot" style="background:var(--fat)"></div>
+          <div>
+            <div class="macro-name">Fat</div>
+            <div class="macro-desc">Needed for hormones, brain function, and absorbing vitamins A, D, E and K.</div>
+          </div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-dot" style="background:var(--carb)"></div>
+          <div>
+            <div class="macro-name">Carbohydrates</div>
+            <div class="macro-desc">Your body's primary energy source. Whole food sources where possible.</div>
+          </div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-dot" style="background:var(--fiber)"></div>
+          <div>
+            <div class="macro-name">Fiber</div>
+            <div class="macro-desc">Supports digestion and gut health. Most adults benefit from 25–38g per day.</div>
+          </div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-dot" style="background:var(--sugar)"></div>
+          <div>
+            <div class="macro-name">Sugar</div>
+            <div class="macro-desc">Tracks total sugar. The WHO recommends keeping free sugars under 25g/day.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Privacy</div>
+      <p>All data lives in your browser's local storage. Nothing is transmitted to any server. No accounts, no analytics, no third-party services beyond loading fonts from Google Fonts.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     INSTALL
+════════════════════════════════════════ -->
+<div class="page" id="page-install">
+  <div class="page-blob page-blob-a"></div>
+  <div class="page-blob page-blob-b"></div>
+  <div class="inner">
+    <div class="page-heading anim-child">
+      <div class="eyebrow">Progressive Web App</div>
+      <h2>Install</h2>
+    </div>
+    <p class="install-intro anim-child">Add Simple Tracker to your home screen or desktop for free — no app store, no download, no account needed. It opens in its own window just like a native app.</p>
+
+    <div class="accordion anim-child" id="acc-android">
+      <div class="acc-head" onclick="toggleAcc('android')">
+        <span class="acc-title">Android</span>
+        <span class="acc-tag">Chrome / Brave / Edge</span>
+        <span class="acc-chev">&#9660;</span>
+      </div>
+      <div class="acc-body">
+        <div class="steps">
+          <div class="step"><div class="step-n">1</div><div class="step-t">Open this page in <b>Chrome</b>, Brave, or any Chromium-based browser.</div></div>
+          <div class="step"><div class="step-n">2</div><div class="step-t">Tap the <b>three-dot menu (&#8942;)</b> in the top-right corner.</div></div>
+          <div class="step"><div class="step-n">3</div><div class="step-t">Tap <b>Add to Home screen</b> or <b>Install app</b> — whichever appears.</div></div>
+          <div class="step"><div class="step-n">4</div><div class="step-t">Confirm the name and tap <b>Add</b>. The icon appears on your home screen.</div></div>
+        </div>
+        <div class="install-note">Firefox on Android: tap the three-dot menu and select <b>Install</b> or <b>Add to Home screen</b>.</div>
+      </div>
+    </div>
+
+    <div class="accordion" id="acc-windows">
+      <div class="acc-head" onclick="toggleAcc('windows')">
+        <span class="acc-title">Windows</span>
+        <span class="acc-tag">Edge / Chrome</span>
+        <span class="acc-chev">&#9660;</span>
+      </div>
+      <div class="acc-body">
+        <div class="steps">
+          <div class="step"><div class="step-n">1</div><div class="step-t">Open this page in <b>Microsoft Edge</b> or <b>Google Chrome</b>.</div></div>
+          <div class="step"><div class="step-n">2</div><div class="step-t">Click the <b>install icon</b> in the address bar, or open the browser menu and choose <b>Install Simple Tracker</b> or <b>Install this site as an app</b>.</div></div>
+          <div class="step"><div class="step-n">3</div><div class="step-t">Click <b>Install</b>. The app opens in its own window with a taskbar icon.</div></div>
+        </div>
+        <div class="install-note">Right-click the taskbar icon after installing to pin it to your Start menu or taskbar permanently.</div>
+      </div>
+    </div>
+
+    <div class="accordion" id="acc-ios">
+      <div class="acc-head" onclick="toggleAcc('ios')">
+        <span class="acc-title">iPhone &amp; iPad</span>
+        <span class="acc-tag">Safari only</span>
+        <span class="acc-chev">&#9660;</span>
+      </div>
+      <div class="acc-body">
+        <div class="steps">
+          <div class="step"><div class="step-n">1</div><div class="step-t">Open this page in <b>Safari</b>. iOS only supports installation through Safari.</div></div>
+          <div class="step"><div class="step-n">2</div><div class="step-t">Tap the <b>Share button</b> — the box with an arrow pointing up.</div></div>
+          <div class="step"><div class="step-n">3</div><div class="step-t">Scroll and tap <b>Add to Home Screen</b>.</div></div>
+          <div class="step"><div class="step-n">4</div><div class="step-t">Tap <b>Add</b> in the top-right. The icon appears on your home screen.</div></div>
+        </div>
+        <div class="install-note">On iOS 16.4 and later, apps added this way gain improved fullscreen support.</div>
+      </div>
+    </div>
+
+    <div class="accordion" id="acc-linux">
+      <div class="acc-head" onclick="toggleAcc('linux')">
+        <span class="acc-title">Linux</span>
+        <span class="acc-tag">Chrome / Chromium</span>
+        <span class="acc-chev">&#9660;</span>
+      </div>
+      <div class="acc-body">
+        <div class="steps">
+          <div class="step"><div class="step-n">1</div><div class="step-t">Open this page in <b>Google Chrome</b> or <b>Chromium</b>.</div></div>
+          <div class="step"><div class="step-n">2</div><div class="step-t">Click the <b>install icon</b> in the address bar, or open the three-dot menu and select <b>Install Simple Tracker</b> or <b>Create shortcut</b>.</div></div>
+          <div class="step"><div class="step-n">3</div><div class="step-t">Check <b>Open as window</b> if prompted, then click <b>Create</b>.</div></div>
+        </div>
+        <div class="install-note">Works on GNOME, KDE, XFCE and most desktop environments. Tested on Ubuntu, Fedora, Arch and Debian.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     IMPRESSUM
+════════════════════════════════════════ -->
+<div class="page" id="page-impressum">
+  <div class="page-blob page-blob-a"></div>
+  <div class="page-blob page-blob-b"></div>
+  <div class="inner">
+    <div class="page-heading anim-child">
+      <div class="eyebrow">Legal Notice</div>
+      <h2>Impressum</h2>
+    </div>
+
+    <div class="about-body anim-child">
+      <div class="section-title">About This Site</div>
+      <p>Simple Tracker is a non-commercial, free-to-use hobby project with no advertising, no monetisation and no commercial intent.</p>
+
+      <div class="section-title">Contact</div>
+      <p>Email: <a href="mailto:simpletracker12@gmail.com"
+        style="color:var(--text);text-decoration:underline;text-underline-offset:3px;">
+        simpletracker12@gmail.com</a>
+      </p>
+
+      <div class="section-title">Responsible for Content</div>
+      <p>Keno. Contact via the email address above.</p>
+
+      <div class="section-title">Disclaimer</div>
+      <p>This website is provided as-is for personal, non-commercial use. The operator assumes no liability for the accuracy, completeness or timeliness of the information provided. All nutritional information entered by users is stored locally in the user's own browser and is not accessible to the operator.</p>
+
+      <div class="section-title">External Links</div>
+      <p>This site loads fonts from Google Fonts (fonts.googleapis.com). No other external services are used. No user data is transmitted to any third party by this site.</p>
+
+      <div class="section-title">Copyright</div>
+      <p>The design and code of Simple Tracker were created by the operator. Redistribution or commercial use without permission is not permitted.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     EXPORT DATA
+════════════════════════════════════════ -->
+<div class="page" id="page-export">
+  <div class="page-blob page-blob-a"></div>
+  <div class="page-blob page-blob-b"></div>
+  <div class="inner">
+    <div class="page-heading anim-child">
+      <div class="eyebrow">Your Data</div>
+      <h2>Export</h2>
+    </div>
+
+    <!-- SUMMARY CARD -->
+    <div class="exp-summary anim-child">
+      <div class="exp-sum-item">
+        <div class="exp-sum-lbl">Entries today</div>
+        <div class="exp-sum-num" id="expEntryCount">0</div>
+      </div>
+      <div class="exp-sum-div"></div>
+      <div class="exp-sum-item">
+        <div class="exp-sum-lbl">Calories logged</div>
+        <div class="exp-sum-num" id="expCalTotal">0</div>
+      </div>
+      <div class="exp-sum-div"></div>
+      <div class="exp-sum-item">
+        <div class="exp-sum-lbl">Protein logged</div>
+        <div class="exp-sum-num" id="expProTotal">0</div>
+      </div>
+    </div>
+
+    <!-- DOWNLOAD BUTTONS -->
+    <div class="exp-btns anim-child">
+      <button class="exp-btn exp-btn-primary" id="exportCSVBtn" onclick="exportCSV()">
+        <span class="exp-btn-icon">↓</span>
+        <div>
+          <div class="exp-btn-title">Download as CSV</div>
+          <div class="exp-btn-sub">Opens in Excel, Google Sheets, Numbers</div>
+        </div>
+      </button>
+      <button class="exp-btn" id="exportJSONBtn" onclick="exportJSON()">
+        <span class="exp-btn-icon">↓</span>
+        <div>
+          <div class="exp-btn-title">Download as JSON</div>
+          <div class="exp-btn-sub">Raw data — for developers or backups</div>
+        </div>
+      </button>
+    </div>
+
+    <!-- HOW TO OPEN TUTORIAL -->
+    <div class="section-title anim-child">How to open your data</div>
+
+    <div class="exp-tutorials anim-child">
+
+      <div class="accordion" id="acc-excel">
+        <div class="acc-head" onclick="toggleAcc('excel')">
+          <span class="acc-title">Microsoft Excel</span>
+          <span class="acc-tag">Windows / Mac</span>
+          <span class="acc-chev">&#9660;</span>
+        </div>
+        <div class="acc-body">
+          <div class="steps">
+            <div class="step"><div class="step-n">1</div><div class="step-t">Download the CSV file using the button above.</div></div>
+            <div class="step"><div class="step-n">2</div><div class="step-t">Open <b>Excel</b> and go to <b>File → Open</b>, then find your downloaded file.</div></div>
+            <div class="step"><div class="step-n">3</div><div class="step-t">If Excel asks about import settings, select <b>Comma</b> as the delimiter and click <b>Finish</b>.</div></div>
+            <div class="step"><div class="step-n">4</div><div class="step-t">Your entries are now in a spreadsheet — you can sort, filter, or chart any column.</div></div>
+          </div>
+          <div class="install-note">Tip: Select all columns and click <b>Format as Table</b> for easy filtering by macro.</div>
+        </div>
+      </div>
+
+      <div class="accordion" id="acc-sheets">
+        <div class="acc-head" onclick="toggleAcc('sheets')">
+          <span class="acc-title">Google Sheets</span>
+          <span class="acc-tag">Any device</span>
+          <span class="acc-chev">&#9660;</span>
+        </div>
+        <div class="acc-body">
+          <div class="steps">
+            <div class="step"><div class="step-n">1</div><div class="step-t">Download the CSV file.</div></div>
+            <div class="step"><div class="step-n">2</div><div class="step-t">Go to <b>sheets.google.com</b> and create a new blank spreadsheet.</div></div>
+            <div class="step"><div class="step-n">3</div><div class="step-t">Click <b>File → Import</b>, then <b>Upload</b> and select your CSV file.</div></div>
+            <div class="step"><div class="step-n">4</div><div class="step-t">Choose <b>Replace spreadsheet</b> and click <b>Import data</b>.</div></div>
+          </div>
+          <div class="install-note">Google Sheets works on mobile too — great for reviewing your data on your phone.</div>
+        </div>
+      </div>
+
+      <div class="accordion" id="acc-numbers">
+        <div class="acc-head" onclick="toggleAcc('numbers')">
+          <span class="acc-title">Apple Numbers</span>
+          <span class="acc-tag">iPhone / iPad / Mac</span>
+          <span class="acc-chev">&#9660;</span>
+        </div>
+        <div class="acc-body">
+          <div class="steps">
+            <div class="step"><div class="step-n">1</div><div class="step-t">Download the CSV file to your device.</div></div>
+            <div class="step"><div class="step-n">2</div><div class="step-t">Find the file in the <b>Files app</b> (usually in Downloads).</div></div>
+            <div class="step"><div class="step-n">3</div><div class="step-t">Tap the file — it will open directly in <b>Numbers</b> automatically.</div></div>
+            <div class="step"><div class="step-n">4</div><div class="step-t">All your entries appear as a table. Tap any column header to sort.</div></div>
+          </div>
+          <div class="install-note">On iPhone, tap the share icon after opening to send the spreadsheet to someone.</div>
+        </div>
+      </div>
+
+      <div class="accordion" id="acc-jsonview">
+        <div class="acc-head" onclick="toggleAcc('jsonview')">
+          <span class="acc-title">JSON file</span>
+          <span class="acc-tag">Backup / Developers</span>
+          <span class="acc-chev">&#9660;</span>
+        </div>
+        <div class="acc-body">
+          <div class="steps">
+            <div class="step"><div class="step-n">1</div><div class="step-t">Download the JSON file using the button above.</div></div>
+            <div class="step"><div class="step-n">2</div><div class="step-t">Open it in any text editor (Notepad, VS Code, TextEdit) to view the raw data.</div></div>
+            <div class="step"><div class="step-n">3</div><div class="step-t">The file contains your entries and your current goals — useful as a backup.</div></div>
+            <div class="step"><div class="step-n">4</div><div class="step-t">To restore: copy the entries array, paste it into your browser console as <b>localStorage.setItem('st_entries', '...')</b>.</div></div>
+          </div>
+          <div class="install-note">JSON is the most complete export — it includes both your entries and your goal settings.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- WHAT'S INCLUDED NOTE -->
+    <div class="exp-note anim-child">
+      <div class="exp-note-title">What gets exported</div>
+      <p>The export includes all entries logged today: name, calories, protein, fat, carbs, fiber and sugar for each entry, plus your current daily goal settings. Data from previous days is not stored — Simple Tracker only keeps today's log.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     RESOURCES
+════════════════════════════════════════ -->
+<div class="page" id="page-resources">
+  <div class="page-blob page-blob-a"></div>
+  <div class="page-blob page-blob-b"></div>
+  <div class="inner">
+    <div class="page-heading anim-child">
+      <div class="eyebrow">Recipes &amp; Links</div>
+      <h2>Resources</h2>
+    </div>
+
+    <!-- RECIPE SECTION -->
+    <div class="section-title anim-child">High-protein recipes</div>
+    <p class="res-intro anim-child">Quick meals that hit your macros without overthinking it. Each card shows the approximate macros per serving.</p>
+
+    <div class="res-recipes anim-child">
+
+      <div class="res-recipe">
+        <div class="res-recipe-head">
+          <div class="res-recipe-name">Chicken &amp; Rice Bowl</div>
+          <div class="res-recipe-tag" style="color:var(--pro)">High protein</div>
+        </div>
+        <div class="res-recipe-macros">
+          <span class="res-mac" style="color:var(--cal)">~520 kcal</span>
+          <span class="res-mac" style="color:var(--pro)">48g protein</span>
+          <span class="res-mac" style="color:var(--carb)">52g carbs</span>
+          <span class="res-mac" style="color:var(--fat)">9g fat</span>
+        </div>
+        <div class="res-recipe-body">
+          <b>Ingredients (1 serving):</b> 150g chicken breast · 150g cooked white rice · 1 tbsp soy sauce · ½ tsp garlic powder · 1 tsp olive oil · handful of broccoli
+          <br><br>
+          <b>Method:</b> Season chicken with garlic powder and salt. Cook in olive oil 6–7 min per side until cooked through. Slice and serve over rice with soy sauce. Steam broccoli on the side.
+        </div>
+      </div>
+
+      <div class="res-recipe">
+        <div class="res-recipe-head">
+          <div class="res-recipe-name">Greek Yoghurt Protein Bowl</div>
+          <div class="res-recipe-tag" style="color:var(--carb)">Quick breakfast</div>
+        </div>
+        <div class="res-recipe-macros">
+          <span class="res-mac" style="color:var(--cal)">~380 kcal</span>
+          <span class="res-mac" style="color:var(--pro)">35g protein</span>
+          <span class="res-mac" style="color:var(--carb)">40g carbs</span>
+          <span class="res-mac" style="color:var(--fat)">6g fat</span>
+        </div>
+        <div class="res-recipe-body">
+          <b>Ingredients (1 serving):</b> 250g 0% Greek yoghurt · 40g oats · 1 scoop vanilla protein powder · 1 tbsp honey · handful of berries
+          <br><br>
+          <b>Method:</b> Mix yoghurt, oats and protein powder together. Top with berries and a drizzle of honey. Can be prepped the night before — just add the berries in the morning.
+        </div>
+      </div>
+
+      <div class="res-recipe">
+        <div class="res-recipe-head">
+          <div class="res-recipe-name">Tuna &amp; Avocado Rice Cakes</div>
+          <div class="res-recipe-tag" style="color:var(--fiber)">Low calorie</div>
+        </div>
+        <div class="res-recipe-macros">
+          <span class="res-mac" style="color:var(--cal)">~290 kcal</span>
+          <span class="res-mac" style="color:var(--pro)">28g protein</span>
+          <span class="res-mac" style="color:var(--carb)">22g carbs</span>
+          <span class="res-mac" style="color:var(--fat)">8g fat</span>
+        </div>
+        <div class="res-recipe-body">
+          <b>Ingredients (1 serving):</b> 1 can tuna in water (drained) · ½ avocado · 4 rice cakes · squeeze of lemon · salt &amp; pepper
+          <br><br>
+          <b>Method:</b> Mash avocado with lemon, salt and pepper. Mix tuna in separately. Spread avocado on rice cakes and top with tuna. Ready in under 5 minutes.
+        </div>
+      </div>
+
+      <div class="res-recipe">
+        <div class="res-recipe-head">
+          <div class="res-recipe-name">Egg White Omelette</div>
+          <div class="res-recipe-tag" style="color:var(--sugar)">Low carb</div>
+        </div>
+        <div class="res-recipe-macros">
+          <span class="res-mac" style="color:var(--cal)">~220 kcal</span>
+          <span class="res-mac" style="color:var(--pro)">32g protein</span>
+          <span class="res-mac" style="color:var(--carb)">4g carbs</span>
+          <span class="res-mac" style="color:var(--fat)">7g fat</span>
+        </div>
+        <div class="res-recipe-body">
+          <b>Ingredients (1 serving):</b> 5 egg whites · 1 whole egg · 50g spinach · 40g feta cheese · ½ tsp olive oil · salt &amp; pepper
+          <br><br>
+          <b>Method:</b> Whisk eggs together with salt and pepper. Heat oil in a pan, pour in eggs and cook on medium. Add spinach and feta when almost set, fold in half and serve.
+        </div>
+      </div>
+
+      <div class="res-recipe">
+        <div class="res-recipe-head">
+          <div class="res-recipe-name">Overnight Oats</div>
+          <div class="res-recipe-tag" style="color:var(--carb)">Meal prep</div>
+        </div>
+        <div class="res-recipe-macros">
+          <span class="res-mac" style="color:var(--cal)">~410 kcal</span>
+          <span class="res-mac" style="color:var(--pro)">25g protein</span>
+          <span class="res-mac" style="color:var(--carb)">55g carbs</span>
+          <span class="res-mac" style="color:var(--fat)">8g fat</span>
+        </div>
+        <div class="res-recipe-body">
+          <b>Ingredients (1 serving):</b> 70g rolled oats · 200ml milk (any) · 1 scoop protein powder · 1 tbsp peanut butter · 1 banana (sliced)
+          <br><br>
+          <b>Method:</b> Mix oats, milk and protein powder in a jar or container. Stir well, cover and refrigerate overnight. In the morning, top with peanut butter and banana slices.
+        </div>
+      </div>
+
+      <div class="res-recipe">
+        <div class="res-recipe-head">
+          <div class="res-recipe-name">Salmon &amp; Sweet Potato</div>
+          <div class="res-recipe-tag" style="color:var(--cal)">Balanced meal</div>
+        </div>
+        <div class="res-recipe-macros">
+          <span class="res-mac" style="color:var(--cal)">~540 kcal</span>
+          <span class="res-mac" style="color:var(--pro)">42g protein</span>
+          <span class="res-mac" style="color:var(--carb)">38g carbs</span>
+          <span class="res-mac" style="color:var(--fat)">22g fat</span>
+        </div>
+        <div class="res-recipe-body">
+          <b>Ingredients (1 serving):</b> 180g salmon fillet · 200g sweet potato · 1 tsp olive oil · lemon · garlic · salt &amp; pepper
+          <br><br>
+          <b>Method:</b> Dice sweet potato and roast at 200°C for 20 min with olive oil. Season salmon with garlic, salt and lemon. Pan fry skin-side down 4 min, flip 2 min. Serve together.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- WEBSITES SECTION -->
+    <div class="section-title anim-child" style="margin-top:36px;">Useful websites</div>
+    <p class="res-intro anim-child">Trusted sources for nutrition info, training plans, and calorie lookups. All free to use.</p>
+
+    <div class="res-links anim-child">
+
+      <div class="res-cat">
+        <div class="res-cat-label">Calorie &amp; Macro Lookup</div>
+        <a class="res-link" href="https://www.myfitnesspal.com" target="_blank" rel="noopener">
+          <div class="res-link-name">MyFitnessPal <span class="res-ext">↗</span></div>
+          <div class="res-link-desc">The biggest food database online. Search any food and see its full macro breakdown instantly.</div>
+        </a>
+        <a class="res-link" href="https://cronometer.com" target="_blank" rel="noopener">
+          <div class="res-link-name">Cronometer <span class="res-ext">↗</span></div>
+          <div class="res-link-desc">More detailed than most — shows micronutrients too. Great if you want to track vitamins and minerals.</div>
+        </a>
+        <a class="res-link" href="https://www.nutritionix.com" target="_blank" rel="noopener">
+          <div class="res-link-name">Nutritionix <span class="res-ext">↗</span></div>
+          <div class="res-link-desc">Huge database of restaurant and branded foods. Useful for looking up fast food macros.</div>
+        </a>
+      </div>
+
+      <div class="res-cat">
+        <div class="res-cat-label">Training &amp; Fitness</div>
+        <a class="res-link" href="https://www.muscleandstrength.com/workouts" target="_blank" rel="noopener">
+          <div class="res-link-name">Muscle &amp; Strength <span class="res-ext">↗</span></div>
+          <div class="res-link-desc">Hundreds of free workout plans for all levels — bulking, cutting, strength, beginner and advanced.</div>
+        </a>
+        <a class="res-link" href="https://www.reddit.com/r/fitness/wiki/index" target="_blank" rel="noopener">
+          <div class="res-link-name">r/Fitness Wiki <span class="res-ext">↗</span></div>
+          <div class="res-link-desc">Community-written fitness wiki with evidence-based beginner programs, FAQ and nutrition guides.</div>
+        </a>
+        <a class="res-link" href="https://exrx.net" target="_blank" rel="noopener">
+          <div class="res-link-name">ExRx.net <span class="res-ext">↗</span></div>
+          <div class="res-link-desc">Exercise library with instructions and form tips for every movement. Good for learning proper technique.</div>
+        </a>
+      </div>
+
+      <div class="res-cat">
+        <div class="res-cat-label">Weight Loss &amp; Dieting</div>
+        <a class="res-link" href="https://tdeecalculator.net" target="_blank" rel="noopener">
+          <div class="res-link-name">TDEE Calculator <span class="res-ext">↗</span></div>
+          <div class="res-link-desc">Find your Total Daily Energy Expenditure — how many calories you burn per day based on your stats and activity level.</div>
+        </a>
+        <a class="res-link" href="https://www.healthline.com/nutrition" target="_blank" rel="noopener">
+          <div class="res-link-name">Healthline Nutrition <span class="res-ext">↗</span></div>
+          <div class="res-link-desc">Evidence-based nutrition articles reviewed by dietitians. Good for understanding macros, diets and food science.</div>
+        </a>
+        <a class="res-link" href="https://examine.com" target="_blank" rel="noopener">
+          <div class="res-link-name">Examine.com <span class="res-ext">↗</span></div>
+          <div class="res-link-desc">Unbiased supplement and nutrition research summaries. Find out what actually works based on studies.</div>
+        </a>
+      </div>
+
+      <div class="res-cat">
+        <div class="res-cat-label">More Recipes</div>
+        <a class="res-link" href="https://www.bbcgoodfood.com/recipes/collection/high-protein-recipes" target="_blank" rel="noopener">
+          <div class="res-link-name">BBC Good Food — High Protein <span class="res-ext">↗</span></div>
+          <div class="res-link-desc">Hundreds of high-protein recipes with full nutritional info. Reliable, well-tested and easy to follow.</div>
+        </a>
+        <a class="res-link" href="https://www.skinnytaste.com" target="_blank" rel="noopener">
+          <div class="res-link-name">Skinnytaste <span class="res-ext">↗</span></div>
+          <div class="res-link-desc">Lighter versions of popular recipes with full macro breakdowns. Great for weight loss without giving up good food.</div>
+        </a>
+        <a class="res-link" href="https://www.mealprepping.com" target="_blank" rel="noopener">
+          <div class="res-link-name">MealPrepping.com <span class="res-ext">↗</span></div>
+          <div class="res-link-desc">Meal prep ideas, guides and recipes for cooking in bulk so you always have macro-friendly food ready.</div>
+        </a>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── MACROS CONFIG ─────────────────────────────
+const MACROS = [
+  { key:'cal',   label:'Calories', unit:'kcal', cls:'cal',   defaultGoal:2800 },
+  { key:'pro',   label:'Protein',  unit:'g',    cls:'pro',   defaultGoal:160  },
+  { key:'fat',   label:'Fat',      unit:'g',    cls:'fat',   defaultGoal:80   },
+  { key:'carb',  label:'Carbs',    unit:'g',    cls:'carb',  defaultGoal:300  },
+  { key:'fiber', label:'Fiber',    unit:'g',    cls:'fiber', defaultGoal:30   },
+  { key:'sugar', label:'Sugar',    unit:'g',    cls:'sugar', defaultGoal:50   },
+];
+
+const CLR = {
+  cal:'#f97316', pro:'#38bdf8', fat:'#facc15',
+  carb:'#4ade80', fiber:'#c084fc', sugar:'#f472b6'
+};
+
+// ── STATE ─────────────────────────────────────
+let entries = JSON.parse(localStorage.getItem('st_entries') || '[]');
+let goals   = JSON.parse(localStorage.getItem('st_goals')   || 'null')
+            || Object.fromEntries(MACROS.map(m => [m.key, m.defaultGoal]));
+
+// ── PWA detection — open tracker directly ─────
+const isPWA = window.matchMedia('(display-mode: standalone)').matches
+           || window.navigator.standalone === true;
+
+// ── DATE ──────────────────────────────────────
+document.getElementById('dateLabel').textContent =
+  new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' });
+
+// ── BLOB PARALLAX ON SCROLL ───────────────────
+(function() {
+  let ticking = false;
+
+  function updateBlobs() {
+    const activePage = document.querySelector('.page.active');
+    if (!activePage || activePage.id === 'page-home') return;
+
+    const scrollY = window.scrollY;
+    const blobA = activePage.querySelector('.page-blob-a');
+    const blobB = activePage.querySelector('.page-blob-b');
+
+    if (blobA) blobA.style.transform = `translateY(${scrollY * 0.18}px) translateX(${scrollY * 0.04}px)`;
+    if (blobB) blobB.style.transform = `translateY(${-scrollY * 0.12}px) translateX(${-scrollY * 0.03}px)`;
+
+    ticking = false;
+  }
+
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(updateBlobs);
+      ticking = true;
+    }
+  }, { passive: true });
+})();
+
+// ── THEME ─────────────────────────────────────
+function applyTheme(theme) {
+  const isLight = theme === 'light';
+  document.body.classList.toggle('light', isLight);
+  const icon = document.getElementById('themeIcon');
+  if (icon) icon.textContent = isLight ? '☾' : '☀';
+  localStorage.setItem('st_theme', theme);
+  // Recreate stars so colours update — safe whether home is visible or not
+  // Use 80ms so the IIFE is always defined by then
+  clearTimeout(window._starThemeTimer);
+  window._starThemeTimer = setTimeout(() => {
+    if (document.getElementById('page-home').classList.contains('active')) {
+      window._startStars && window._startStars();
+    }
+  }, 80);
+}
+
+function toggleTheme() {
+  const current = localStorage.getItem('st_theme') || 'dark';
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+// ── STAR CANVAS ───────────────────────────────
+(function() {
+  const canvas = document.getElementById('starCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  let W, H, stars = [];
+  let mouseX = 0, mouseY = 0;
+  let raf;
+
+  const STAR_COUNT = 90;
+  const PARALLAX   = 0.045;
+
+  function resize() {
+    const home = document.getElementById('page-home');
+    W = canvas.width  = home.offsetWidth;
+    H = canvas.height = Math.max(home.offsetHeight, window.innerHeight);
+    mouseX = W / 2;
+    mouseY = H / 2;
+  }
+
+  function randBetween(a, b) { return a + Math.random() * (b - a); }
+
+  function hexToRgba(hex, a) {
+    const r = parseInt(hex.slice(1,3),16);
+    const g = parseInt(hex.slice(3,5),16);
+    const b = parseInt(hex.slice(5,7),16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+
+  function pickColor() {
+    const isLight = document.body.classList.contains('light');
+    const base    = isLight ? '#1a1917' : '#f0efed';
+    const accents = ['#f97316','#38bdf8','#facc15','#c084fc','#f472b6'];
+    return Math.random() < 0.65 ? base : accents[Math.floor(Math.random()*accents.length)];
+  }
+
+  function createStars() {
+    stars = [];
+    const isLight = document.body.classList.contains('light');
+    for (let i = 0; i < STAR_COUNT; i++) {
+      const star = {
+        x:     randBetween(0, W),
+        y:     randBetween(0, H),
+        r:     randBetween(0.5, 2.4) * (isLight ? 1.4 : 1.0),
+        speed: randBetween(0.05, 0.18),
+        phase: randBetween(0, Math.PI * 2),
+        depth: randBetween(0.2, 1.0),
+        color: pickColor(),
+      };
+      star.baseX = star.x;
+      star.baseY = star.y;
+      stars.push(star);
+    }
+  }
+
+  let t = 0;
+  function drawClean() {
+    ctx.clearRect(0, 0, W, H);
+    t += 0.012;
+
+    const isLight  = document.body.classList.contains('light');
+    // light mode stars need higher alpha to be visible on pale bg
+    const alphaBase = isLight ? 0.45 : 0.25;
+    const alphaAmp  = isLight ? 0.50 : 0.70;
+
+    const cx = (mouseX / W - 0.5) * 2;
+    const cy = (mouseY / H - 0.5) * 2;
+
+    stars.forEach(s => {
+      const ox    = cx * PARALLAX * s.depth * W * 0.5;
+      const oy    = cy * PARALLAX * s.depth * H * 0.5;
+      const px    = s.baseX + ox;
+      const py    = s.baseY + oy;
+      const alpha = alphaBase + alphaAmp * (0.5 + 0.5 * Math.sin(t * s.speed * 8 + s.phase));
+      const r     = s.r * (0.85 + 0.15 * Math.sin(t * s.speed * 5 + s.phase));
+
+      // Glow halo for larger stars
+      if (s.r > 1.3) {
+        const grd = ctx.createRadialGradient(px, py, 0, px, py, r * 4.5);
+        grd.addColorStop(0,   hexToRgba(s.color, alpha * 0.85));
+        grd.addColorStop(0.4, hexToRgba(s.color, alpha * 0.25));
+        grd.addColorStop(1,   hexToRgba(s.color, 0));
+        ctx.beginPath();
+        ctx.arc(px, py, r * 4.5, 0, Math.PI * 2);
+        ctx.fillStyle = grd;
+        ctx.fill();
+      }
+
+      // Core dot
+      ctx.beginPath();
+      ctx.arc(px, py, r, 0, Math.PI * 2);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle   = s.color;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+
+    raf = requestAnimationFrame(drawClean);
+  }
+
+  // Mouse / touch tracking
+  document.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    mouseX = e.clientX - rect.left;
+    mouseY = e.clientY - rect.top;
+  });
+
+  // On mouse leave, drift back to centre smoothly
+  document.addEventListener('mouseleave', () => {
+    mouseX = W / 2;
+    mouseY = H / 2;
+  });
+
+  document.addEventListener('touchmove', e => {
+    if (e.touches.length) {
+      const rect = canvas.getBoundingClientRect();
+      mouseX = e.touches[0].clientX - rect.left;
+      mouseY = e.touches[0].clientY - rect.top;
+    }
+  }, { passive: true });
+
+  // Reset to centre when finger lifts — stops stars flying to corner
+  document.addEventListener('touchend', () => {
+    mouseX = W / 2;
+    mouseY = H / 2;
+  }, { passive: true });
+
+  function startStars() {
+    resize();
+    createStars();
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(drawClean);
+  }
+
+  function stopStars() {
+    cancelAnimationFrame(raf);
+    ctx.clearRect(0, 0, W, H);
+  }
+
+  window.addEventListener('resize', () => {
+    if (document.getElementById('page-home').classList.contains('active')) {
+      resize();
+      createStars();
+    }
+  });
+
+  window._startStars = startStars;
+  window._stopStars  = stopStars;
+})();
+
+// ── PAGE TRANSITIONS + SCROLL REVEAL ──────────
+function animatePage(id) {
+  // Stagger all .anim-child elements on the new page
+  const page = document.getElementById('page-' + id);
+  if (!page) return;
+  const children = page.querySelectorAll('.anim-child');
+  children.forEach((el, i) => {
+    el.classList.remove('visible');
+    setTimeout(() => el.classList.add('visible'), 60 + i * 70);
+  });
+}
+
+// ── NAV ───────────────────────────────────────
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.drawer-link').forEach(d => d.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  const navEl = document.getElementById('nav-' + id);
+  if (navEl) navEl.classList.add('active');
+  closeMenu();
+  window.scrollTo(0, 0);
+  animatePage(id);
+  if (id === 'export') updateExportSummary();
+  // Reset blob parallax positions
+  const blobs = document.querySelectorAll('#page-' + id + ' .page-blob');
+  blobs.forEach(b => b.style.transform = '');
+  // Stars
+  if (id === 'home') window._startStars && window._startStars();
+  else               window._stopStars  && window._stopStars();
+}
+
+function toggleMenu() {
+  const o = document.getElementById('drawer').classList.toggle('open');
+  document.getElementById('burger').classList.toggle('open', o);
+  document.getElementById('overlay').classList.toggle('open', o);
+}
+
+function closeMenu() {
+  ['drawer','burger','overlay'].forEach(id =>
+    document.getElementById(id).classList.remove('open'));
+}
+
+function toggleAcc(id) {
+  document.getElementById('acc-' + id).classList.toggle('open');
+}
+
+// ── BUILD GOALS ───────────────────────────────
+function buildGoals() {
+  document.getElementById('goalsGrid').innerHTML = MACROS.map(m => `
+    <div class="goal-cell">
+      <div class="goal-lbl">
+        <span class="swatch" style="background:${CLR[m.key]}"></span>${m.label}
+      </div>
+      <div class="goal-input-row">
+        <input class="goal-input" type="number" id="goal_${m.key}"
+          value="${goals[m.key]}" min="0" oninput="updateGoal('${m.key}',this.value)">
+        <span class="goal-unit">${m.unit}</span>
+      </div>
+    </div>`).join('');
+}
+
+function updateGoal(key, val) {
+  goals[key] = parseInt(val) || 0;
+  localStorage.setItem('st_goals', JSON.stringify(goals));
+  render();
+}
+
+// ── BUILD BARS ────────────────────────────────
+function buildBars() {
+  document.getElementById('barsSection').innerHTML = MACROS.map(m => `
+    <div class="bar-row">
+      <div class="bar-lbl" style="color:${CLR[m.key]}">${m.label}</div>
+      <div class="bar-track">
+        <div class="bar-fill ${m.cls}" id="bar_${m.key}"></div>
+      </div>
+      <div class="bar-vals">
+        <span class="bar-cur ${m.cls}" id="val_${m.key}">0</span>
+        <span class="bar-sep">/</span>
+        <span class="bar-goal" id="gv_${m.key}">${goals[m.key]}</span>
+        <span class="bar-unit">${m.unit}</span>
+      </div>
+    </div>`).join('');
+}
+
+// Macros that turn red when exceeded
+const WARN_MACROS = new Set(['cal','fat','sugar']);
+
+// ── RENDER ────────────────────────────────────
+function render() {
+  const totals = Object.fromEntries(
+    MACROS.map(m => [m.key, entries.reduce((s,e) => s+(e[m.key]||0), 0)])
+  );
+  MACROS.forEach(m => {
+    const pct  = goals[m.key] > 0 ? Math.min(totals[m.key]/goals[m.key]*100, 100) : 0;
+    const over = goals[m.key] > 0 && totals[m.key] > goals[m.key] && WARN_MACROS.has(m.key);
+    const b    = document.getElementById('bar_'+m.key);
+    const v    = document.getElementById('val_'+m.key);
+    const g    = document.getElementById('gv_'+m.key);
+    const row  = b && b.closest('.bar-row');
+    if (b) {
+      b.style.width = pct+'%';
+      b.classList.toggle('over-limit', over);
+    }
+    if (v) {
+      v.textContent = totals[m.key];
+      v.classList.toggle('over-limit', over);
+    }
+    if (row) row.classList.toggle('over-limit', over);
+    if (g) g.textContent = goals[m.key];
+  });
+
+  const el = document.getElementById('entries');
+  buildHomeBars();
+  if (!entries.length) {
+    el.innerHTML = '<div class="empty-state">No entries yet today.</div>';
+    return;
+  }
+  el.innerHTML = entries.map((e,i) => {
+    const pills = MACROS
+      .filter(m => (e[m.key]||0) > 0)
+      .map(m => `<span class="pill ${m.cls}">${e[m.key]}&thinsp;${m.unit}</span>`)
+      .join('');
+    return `
+      <div class="entry">
+        <div class="entry-name">${e.name||'—'}</div>
+        <div class="entry-pills">${pills}</div>
+        <button class="del-btn" onclick="deleteEntry(${i})" title="Remove">&#215;</button>
+      </div>`;
+  }).join('');
+}
+
+// ── ADD / DELETE / RESET ──────────────────────
+function addEntry() {
+  const name  = document.getElementById('inName').value.trim() || 'Meal';
+  const cal   = parseFloat(document.getElementById('inCal').value)   || 0;
+  const pro   = parseFloat(document.getElementById('inPro').value)   || 0;
+  const fat   = parseFloat(document.getElementById('inFat').value)   || 0;
+  const carb  = parseFloat(document.getElementById('inCarb').value)  || 0;
+  const fiber = parseFloat(document.getElementById('inFiber').value) || 0;
+  const sugar = parseFloat(document.getElementById('inSugar').value) || 0;
+  if (!cal && !pro && !fat && !carb && !fiber && !sugar) return;
+  entries.push({ name, cal, pro, fat, carb, fiber, sugar });
+  localStorage.setItem('st_entries', JSON.stringify(entries));
+  ['inName','inCal','inPro','inFat','inCarb','inFiber','inSugar']
+    .forEach(id => document.getElementById(id).value = '');
+  document.getElementById('inName').focus();
+  render();
+}
+
+function deleteEntry(i) {
+  entries.splice(i,1);
+  localStorage.setItem('st_entries', JSON.stringify(entries));
+  render();
+}
+
+function resetDay() {
+  if (!confirm('Clear all entries for today?')) return;
+  entries = [];
+  localStorage.setItem('st_entries', JSON.stringify(entries));
+  render();
+}
+
+['inName','inCal','inPro','inFat','inCarb','inFiber','inSugar'].forEach(id =>
+  document.getElementById(id).addEventListener('keydown', e => {
+    if (e.key === 'Enter') addEntry();
+  })
+);
+
+// ── EXPORT SUMMARY ────────────────────────────
+function updateExportSummary() {
+  const total = entries.reduce((s,e) => s+(e.cal||0), 0);
+  const pro   = entries.reduce((s,e) => s+(e.pro||0), 0);
+  const ec = document.getElementById('expEntryCount');
+  const ct = document.getElementById('expCalTotal');
+  const pt = document.getElementById('expProTotal');
+  if (ec) ec.textContent = entries.length;
+  if (ct) ct.textContent = total;
+  if (pt) pt.textContent = pro;
+}
+
+// ── EXPORT CSV ────────────────────────────────
+function exportCSV() {
+  const header = 'Name,Calories (kcal),Protein (g),Fat (g),Carbs (g),Fiber (g),Sugar (g)';
+  const rows = entries.map(e =>
+    [e.name||'', e.cal||0, e.pro||0, e.fat||0, e.carb||0, e.fiber||0, e.sugar||0].join(',')
+  );
+  // Append goals row
+  rows.push('');
+  rows.push('--- Goals ---');
+  rows.push(['Goal',goals.cal,goals.pro,goals.fat,goals.carb,goals.fiber,goals.sugar].join(','));
+
+  const csv  = [header, ...rows].join('\n');
+  const date = new Date().toISOString().slice(0,10);
+  downloadFile(`simpletracker-${date}.csv`, csv, 'text/csv');
+  flashBtn('exportCSVBtn');
+}
+
+// ── EXPORT JSON ───────────────────────────────
+function exportJSON() {
+  const data = {
+    exported: new Date().toISOString(),
+    goals,
+    entries
+  };
+  const date = new Date().toISOString().slice(0,10);
+  downloadFile(`simpletracker-${date}.json`, JSON.stringify(data, null, 2), 'application/json');
+  flashBtn('exportJSONBtn');
+}
+
+function downloadFile(filename, content, type) {
+  const blob = new Blob([content], { type });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function flashBtn(id) {
+  const btn = document.getElementById(id);
+  if (!btn) return;
+  btn.classList.add('success');
+  setTimeout(() => btn.classList.remove('success'), 1500);
+}
+
+// ── HOME PREVIEW BARS ─────────────────────────
+function buildHomeBars() {
+  const el = document.getElementById('homeBars');
+  if (!el) return;
+  const totals = Object.fromEntries(
+    MACROS.map(m => [m.key, entries.reduce((s,e) => s+(e[m.key]||0), 0)])
+  );
+  el.innerHTML = MACROS.map(m => {
+    const pct = goals[m.key] > 0 ? Math.min(totals[m.key]/goals[m.key]*100, 100) : 0;
+    return `
+      <div class="h-bar-row">
+        <div class="h-bar-lbl" style="color:${CLR[m.key]}">${m.label}</div>
+        <div class="h-bar-track">
+          <div class="h-bar-fill" style="background:${CLR[m.key]};width:${pct}%"></div>
+        </div>
+        <div class="h-bar-pct">${Math.round(pct)}%</div>
+      </div>`;
+  }).join('');
+}
+
+// ── INIT ──────────────────────────────────────
+applyTheme(localStorage.getItem('st_theme') || 'dark');
+buildGoals();
+buildBars();
+buildHomeBars();
+render();
+const startPage = isPWA ? 'tracker' : 'home';
+showPage(startPage);
+// Start stars after full init so _startStars is guaranteed defined
+setTimeout(() => {
+  if (startPage === 'home') window._startStars && window._startStars();
+}, 100);
+
+</script>
+</body>
+</html>
