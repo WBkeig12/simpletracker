@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simple Tracker</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Simple Tracker">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="description" content="Simple Tracker — a free, no-account macro tracker. Log calories, protein, fat, carbs, fiber and sugar against your daily goals.">
+
+<!-- Open Graph / Discord embed -->
+<meta property="og:type"        content="website">
+<meta property="og:title"       content="Simple Tracker">
+<meta property="og:description" content="Track your macros. Simply. Free, no account, works on any device.">
+<meta property="og:image"       content="icons/og-image.png">
+<meta property="og:url"         content=".">
+<meta name="twitter:card"       content="summary_large_image">
+<meta name="twitter:title"      content="Simple Tracker">
+<meta name="twitter:description" content="Track your macros. Simply. Free, no account, works on any device.">
+<meta name="twitter:image"      content="icons/og-image.png">
+
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon.ico">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand" onclick="showPage('home')">Simple Tracker</div>
+  <div class="topbar-right">
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle light/dark mode">
+      <span class="theme-icon" id="themeIcon">☀</span>
+    </button>
+    <button class="burger" id="burger" onclick="toggleMenu()" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</div>
+
+<!-- DRAWER -->
+<div class="drawer" id="drawer">
+  <div class="drawer-link active" id="nav-home"      onclick="showPage('home')">Home <span class="arr">&#9654;</span></div>
+  <div class="drawer-link"        id="nav-tracker"  onclick="showPage('tracker')">Tracker <span class="arr">&#9654;</span></div>
+  <div class="drawer-link"        id="nav-about"    onclick="showPage('about')">About <span class="arr">&#9654;</span></div>
+  <div class="drawer-link"        id="nav-export"   onclick="showPage('export')">Export Data <span class="arr">&#9654;</span></div>
+  <div class="drawer-link"        id="nav-resources" onclick="showPage('resources')">Resources <span class="arr">&#9654;</span></div>
+  <div class="drawer-link"        id="nav-install"  onclick="showPage('install')">Install as App <span class="arr">&#9654;</span></div>
+  <div class="drawer-link"        id="nav-impressum" onclick="showPage('impressum')">Impressum <span class="arr">&#9654;</span></div>
+</div>
+<div class="overlay" id="overlay" onclick="closeMenu()"></div>
+
+<!-- ════════════════════════════════════════
+     HOME
+════════════════════════════════════════ -->
+<div class="page active" id="page-home">
+
+  <!-- STAR CANVAS -->
+  <canvas id="starCanvas"></canvas>
+
+  <!-- HERO -->
+  <div class="h-hero">
+    <div class="h-hero-inner">
+      <div class="h-eyebrow">
+        <span class="h-dot" style="background:var(--cal)"></span>
+        Free &nbsp;·&nbsp; No account &nbsp;·&nbsp; Works on any device
+      </div>
+      <h1 class="h-headline">
+        Track your<br>macros.<br><span class="h-hl">Simply.</span>
+      </h1>
+      <p class="h-sub">Log calories, protein, fat, carbs, fiber and sugar against your daily goals. Clean, fast, no clutter.</p>
+      <div class="h-actions">
+        <button class="h-cta" onclick="showPage('tracker')">Start Tracking &nbsp;&#8594;</button>
+        <button class="h-ghost" onclick="showPage('about')">Learn more</button>
+      </div>
+    </div>
+
+    <!-- LIVE PREVIEW CARD -->
+    <div class="h-preview">
+      <div class="h-preview-label">Today's progress</div>
+      <div class="h-bars" id="homeBars"></div>
+      <div class="h-preview-foot">Updates live as you log entries</div>
+    </div>
+  </div>
+
+  <!-- STATS ROW -->
+  <div class="h-stats">
+    <div class="h-stat">
+      <div class="h-stat-num">6</div>
+      <div class="h-stat-lbl">Macros tracked</div>
+    </div>
+    <div class="h-stat-div"></div>
+    <div class="h-stat">
+      <div class="h-stat-num">100%</div>
+      <div class="h-stat-lbl">Free forever</div>
+    </div>
+    <div class="h-stat-div"></div>
+    <div class="h-stat">
+      <div class="h-stat-num">0</div>
+      <div class="h-stat-lbl">Accounts needed</div>
+    </div>
+    <div class="h-stat-div"></div>
+    <div class="h-stat">
+      <div class="h-stat-num">Unlimited</div>
+      <div class="h-stat-lbl">Daily entries</div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="h-features">
+    <div class="h-feat">
+      <div class="h-feat-icon" style="color:var(--cal)">◈</div>
+      <div class="h-feat-title">All 6 macros</div>
+      <div class="h-feat-body">Calories, protein, fat, carbs, fiber and sugar — tracked together with color-coded progress bars.</div>
+    </div>
+    <div class="h-feat">
+      <div class="h-feat-icon" style="color:var(--pro)">◎</div>
+      <div class="h-feat-title">Your goals</div>
+      <div class="h-feat-body">Set custom daily targets for every macro. Tap any number to edit — changes save instantly.</div>
+    </div>
+    <div class="h-feat">
+      <div class="h-feat-icon" style="color:var(--carb)">◉</div>
+      <div class="h-feat-title">Private by default</div>
+      <div class="h-feat-body">Everything stays in your browser. Nothing is sent to any server. No sign-up, no tracking, no ads.</div>
+    </div>
+    <div class="h-feat">
+      <div class="h-feat-icon" style="color:var(--fiber)">⬡</div>
+      <div class="h-feat-title">Installable</div>
+      <div class="h-feat-body">Add to your home screen on iOS, Android, or desktop. Opens like a native app, no app store needed.</div>
+    </div>
+  </div>
+
+  <!-- BOTTOM CTA -->
+  <div class="h-bottom">
+    <div class="h-bottom-text">Ready to start?</div>
+    <button class="h-cta" onclick="showPage('tracker')">Open Tracker &nbsp;&#8594;</button>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════
+     TRACKER
+════════════════════════════════════════ -->
+<div class="page" id="page-tracker">
+  <div class="page-blob page-blob-a"></div>
+  <div class="page-blob page-blob-b"></div>
+  <div class="inner">
+    <div style="margin-bottom:24px;" class="anim-child">
+      <div class="eyebrow" id="dateLabel"></div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(1.6rem,5vw,2.2rem);letter-spacing:-0.03em;color:var(--text);line-height:1.1;">Today's Log</div>
+    </div>
+
+    <div class="goals-grid anim-child" id="goalsGrid"></div>
+    <div class="bars-card anim-child"  id="barsSection"></div>
+
+    <div class="add-card anim-child">
+      <div class="card-lbl">Add Entry</div>
+      <div class="row1">
+        <div class="field">
+          <label>Name</label>
+          <input type="text" id="inName" placeholder="e.g. Lunch" maxlength="40">
+        </div>
+        <div class="field">
+          <label>Calories</label>
+          <input type="number" id="inCal" placeholder="0" min="0">
+        </div>
+        <div class="field">
+          <label>Protein g</label>
+          <input type="number" id="inPro" placeholder="0" min="0">
+        </div>
+        <div class="field">
+          <label>Fat g</label>
+          <input type="number" id="inFat" placeholder="0" min="0">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Carbs g</label>
+          <input type="number" id="inCarb" placeholder="0" min="0">
+        </div>
+        <div class="field">
+          <label>Fiber g</label>
+          <input type="number" id="inFiber" placeholder="0" min="0">
+        </div>
+        <div class="field">
+          <label>Sugar g</label>
+          <input type="number" id="inSugar" placeholder="0" min="0">
+        </div>
+      </div>
+      <button class="add-btn" onclick="addEntry()">Add Entry</button>
+    </div>
+
+    <div class="entries-title anim-child">Entries</div>
+    <div class="entries-list anim-child" id="entries"></div>
+
+    <div class="reset-row anim-child">
+      <button class="reset-btn" onclick="resetDay()">Reset Today</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     ABOUT
+════════════════════════════════════════ -->
+<div class="page" id="page-about">
+  <div class="page-blob page-blob-a"></div>
+  <div class="page-blob page-blob-b"></div>
+  <div class="inner">
+    <div class="page-heading anim-child">
+      <div class="eyebrow">Documentation</div>
+      <h2>About</h2>
+    </div>
+
+    <div class="about-body anim-child">
+      <div class="section-title">What it is</div>
+      <p>Simple Tracker is a free nutrition logger that runs in your browser. No account required, nothing stored on any server, no ads. Log meals and track six key macros against your personal daily goals.</p>
+
+      <div class="section-title">How to use it</div>
+      <p>Set your daily targets in the goal fields at the top of the tracker — tap any number and type to change it. Fill in the entry form with whatever values you have, then hit Add Entry. You only need to fill in the macros you care about. Entries persist automatically. Hit Reset Today to start fresh.</p>
+
+      <div class="section-title">What it tracks</div>
+      <div class="macro-list">
+        <div class="macro-row">
+          <div class="macro-dot" style="background:var(--cal)"></div>
+          <div>
+            <div class="macro-name">Calories</div>
+            <div class="macro-desc">Total energy intake — the baseline for any nutrition goal.</div>
+          </div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-dot" style="background:var(--pro)"></div>
+          <div>
+            <div class="macro-name">Protein</div>
+            <div class="macro-desc">Essential for muscle repair and satiety. A common guide is 1.6–2.2g per kg of bodyweight for active people.</div>
+          </div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-dot" style="background:var(--fat)"></div>
+          <div>
+            <div class="macro-name">Fat</div>
+            <div class="macro-desc">Needed for hormones, brain function, and absorbing vitamins A, D, E and K.</div>
+          </div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-dot" style="background:var(--carb)"></div>
+          <div>
+            <div class="macro-name">Carbohydrates</div>
+            <div class="macro-desc">Your body's primary energy source. Whole food sources where possible.</div>
+          </div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-dot" style="background:var(--fiber)"></div>
+          <div>
+            <div class="macro-name">Fiber</div>
+            <div class="macro-desc">Supports digestion and gut health. Most adults benefit from 25–38g per day.</div>
+          </div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-dot" style="background:var(--sugar)"></div>
+          <div>
+            <div class="macro-name">Sugar</div>
+            <div class="macro-desc">Tracks total sugar. The WHO recommends keeping free sugars under 25g/day.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Privacy</div>
+      <p>All data lives in your browser's local storage. Nothing is transmitted to any server. No accounts, no analytics, no third-party services beyond loading fonts from Google Fonts.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     INSTALL
+════════════════════════════════════════ -->
+<div class="page" id="page-install">
+  <div class="page-blob page-blob-a"></div>
+  <div class="page-blob page-blob-b"></div>
+  <div class="inner">
+    <div class="page-heading anim-child">
+      <div class="eyebrow">Progressive Web App</div>
+      <h2>Install</h2>
+    </div>
+    <p class="install-intro anim-child">Add Simple Tracker to your home screen or desktop for free — no app store, no download, no account needed. It opens in its own window just like a native app.</p>
+
+    <div class="accordion anim-child" id="acc-android">
+      <div class="acc-head" onclick="toggleAcc('android')">
+        <span class="acc-title">Android</span>
+        <span class="acc-tag">Chrome / Brave / Edge</span>
+        <span class="acc-chev">&#9660;</span>
+      </div>
+      <div class="acc-body">
+        <div class="steps">
+          <div class="step"><div class="step-n">1</div><div class="step-t">Open this page in <b>Chrome</b>, Brave, or any Chromium-based browser.</div></div>
+          <div class="step"><div class="step-n">2</div><div class="step-t">Tap the <b>three-dot menu (&#8942;)</b> in the top-right corner.</div></div>
+          <div class="step"><div class="step-n">3</div><div class="step-t">Tap <b>Add to Home screen</b> or <b>Install app</b> — whichever appears.</div></div>
+          <div class="step"><div class="step-n">4</div><div class="step-t">Confirm the name and tap <b>Add</b>. The icon appears on your home screen.</div></div>
+        </div>
+        <div class="install-note">Firefox on Android: tap the three-dot menu and select <b>Install</b> or <b>Add to Home screen</b>.</div>
+      </div>
+    </div>
+
+    <div class="accordion" id="acc-windows">
+      <div class="acc-head" onclick="toggleAcc('windows')">
+        <span class="acc-title">Windows</span>
+        <span class="acc-tag">Edge / Chrome</span>
+        <span class="acc-chev">&#9660;</span>
+      </div>
+      <div class="acc-body">
+        <div class="steps">
+          <div class="step"><div class="step-n">1</div><div class="step-t">Open this page in <b>Microsoft Edge</b> or <b>Google Chrome</b>.</div></div>
+          <div class="step"><div class="step-n">2</div><div class="step-t">Click the <b>install icon</b> in the address bar, or open the browser menu and choose <b>Install Simple Tracker</b> or <b>Install this site as an app</b>.</div></div>
+          <div class="step"><div class="step-n">3</div><div class="step-t">Click <b>Install</b>. The app opens in its own window with a taskbar icon.</div></div>
+        </div>
+        <div class="install-note">Right-click the taskbar icon after installing to pin it to your Start menu or taskbar permanently.</div>
+      </div>
+    </div>
+
+    <div class="accordion" id="acc-ios">
+      <div class="acc-head" onclick="toggleAcc('ios')">
+        <span class="acc-title">iPhone &amp; iPad</span>
+        <span class="acc-tag">Safari only</span>
+        <span class="acc-chev">&#9660;</span>
+      </div>
+      <div class="acc-body">
+        <div class="steps">
+          <div class="step"><div class="step-n">1</div><div class="step-t">Open this page in <b>Safari</b>. iOS only supports installation through Safari.</div></div>
+          <div class="step"><div class="step-n">2</div><div class="step-t">Tap the <b>Share button</b> — the box with an arrow pointing up.</div></div>
+          <div class="step"><div class="step-n">3</div><div class="step-t">Scroll and tap <b>Add to Home Screen</b>.</div></div>
+          <div class="step"><div class="step-n">4</div><div class="step-t">Tap <b>Add</b> in the top-right. The icon appears on your home screen.</div></div>
+        </div>
+        <div class="install-note">On iOS 16.4 and later, apps added this way gain improved fullscreen support.</div>
+      </div>
+    </div>
+
+    <div class="accordion" id="acc-linux">
+      <div class="acc-head" onclick="toggleAcc('linux')">
+        <span class="acc-title">Linux</span>
+        <span class="acc-tag">Chrome / Chromium</span>
+        <span class="acc-chev">&#9660;</span>
+      </div>
+      <div class="acc-body">
+        <div class="steps">
+          <div class="step"><div class="step-n">1</div><div class="step-t">Open this page in <b>Google Chrome</b> or <b>Chromium</b>.</div></div>
+          <div class="step"><div class="step-n">2</div><div class="step-t">Click the <b>install icon</b> in the address bar, or open the three-dot menu and select <b>Install Simple Tracker</b> or <b>Create shortcut</b>.</div></div>
+          <div class="step"><div class="step-n">3</div><div class="step-t">Check <b>Open as window</b> if prompted, then click <b>Create</b>.</div></div>
+        </div>
+        <div class="install-note">Works on GNOME, KDE, XFCE and most desktop environments. Tested on Ubuntu, Fedora, Arch and Debian.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     IMPRESSUM
+════════════════════════════════════════ -->
+<div class="page" id="page-impressum">
+  <div class="page-blob page-blob-a"></div>
+  <div class="page-blob page-blob-b"></div>
+  <div class="inner">
+    <div class="page-heading anim-child">
+      <div class="eyebrow">Legal Notice</div>
+      <h2>Impressum</h2>
+    </div>
+
+    <div class="about-body anim-child">
+      <div class="section-title">About This Site</div>
+      <p>Simple Tracker is a non-commercial, free-to-use hobby project with no advertising, no monetisation and no commercial intent.</p>
+
+      <div class="section-title">Contact</div>
+      <p>Email: <a href="mailto:simpletracker12@gmail.com"
+        style="color:var(--text);text-decoration:underline;text-underline-offset:3px;">
+        simpletracker12@gmail.com</a>
+      </p>
+
+      <div class="section-title">Responsible for Content</div>
+      <p>Keno. Contact via the email address above.</p>
+
+      <div class="section-title">Disclaimer</div>
+      <p>This website is provided as-is for personal, non-commercial use. The operator assumes no liability for the accuracy, completeness or timeliness of the information provided. All nutritional information entered by users is stored locally in the user's own browser and is not accessible to the operator.</p>
+
+      <div class="section-title">External Links</div>
+      <p>This site loads fonts from Google Fonts (fonts.googleapis.com). No other external services are used. No user data is transmitted to any third party by this site.</p>
+
+      <div class="section-title">Copyright</div>
+      <p>The design and code of Simple Tracker were created by the operator. Redistribution or commercial use without permission is not permitted.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     EXPORT DATA
+════════════════════════════════════════ -->
+<div class="page" id="page-export">
+  <div class="page-blob page-blob-a"></div>
+  <div class="page-blob page-blob-b"></div>
+  <div class="inner">
+    <div class="page-heading anim-child">
+      <div class="eyebrow">Your Data</div>
+      <h2>Export</h2>
+    </div>
+
+    <!-- SUMMARY CARD -->
+    <div class="exp-summary anim-child">
+      <div class="exp-sum-item">
+        <div class="exp-sum-lbl">Entries today</div>
+        <div class="exp-sum-num" id="expEntryCount">0</div>
+      </div>
+      <div class="exp-sum-div"></div>
+      <div class="exp-sum-item">
+        <div class="exp-sum-lbl">Calories logged</div>
+        <div class="exp-sum-num" id="expCalTotal">0</div>
+      </div>
+      <div class="exp-sum-div"></div>
+      <div class="exp-sum-item">
+        <div class="exp-sum-lbl">Protein logged</div>
+        <div class="exp-sum-num" id="expProTotal">0</div>
+      </div>
+    </div>
+
+    <!-- DOWNLOAD BUTTONS -->
+    <div class="exp-btns anim-child">
+      <button class="exp-btn exp-btn-primary" id="exportCSVBtn" onclick="exportCSV()">
+        <span class="exp-btn-icon">↓</span>
+        <div>
+          <div class="exp-btn-title">Download as CSV</div>
+          <div class="exp-btn-sub">Opens in Excel, Google Sheets, Numbers</div>
+        </div>
+      </button>
+      <button class="exp-btn" id="exportJSONBtn" onclick="exportJSON()">
+        <span class="exp-btn-icon">↓</span>
+        <div>
+          <div class="exp-btn-title">Download as JSON</div>
+          <div class="exp-btn-sub">Raw data — for developers or backups</div>
+        </div>
+      </button>
+    </div>
+
+    <!-- HOW TO OPEN TUTORIAL -->
+    <div class="section-title anim-child">How to open your data</div>
+
+    <div class="exp-tutorials anim-child">
+
+      <div class="accordion" id="acc-excel">
+        <div class="acc-head" onclick="toggleAcc('excel')">
+          <span class="acc-title">Microsoft Excel</span>
+          <span class="acc-tag">Windows / Mac</span>
+          <span class="acc-chev">&#9660;</span>
+        </div>
+        <div class="acc-body">
+          <div class="steps">
+            <div class="step"><div class="step-n">1</div><div class="step-t">Download the CSV file using the button above.</div></div>
+            <div class="step"><div class="step-n">2</div><div class="step-t">Open <b>Excel</b> and go to <b>File → Open</b>, then find your downloaded file.</div></div>
+            <div class="step"><div class="step-n">3</div><div class="step-t">If Excel asks about import settings, select <b>Comma</b> as the delimiter and click <b>Finish</b>.</div></div>
+            <div class="step"><div class="step-n">4</div><div class="step-t">Your entries are now in a spreadsheet — you can sort, filter, or chart any column.</div></div>
+          </div>
+          <div class="install-note">Tip: Select all columns and click <b>Format as Table</b> for easy filtering by macro.</div>
+        </div>
+      </div>
+
+      <div class="accordion" id="acc-sheets">
+        <div class="acc-head" onclick="toggleAcc('sheets')">
+          <span class="acc-title">Google Sheets</span>
+          <span class="acc-tag">Any device</span>
+          <span class="acc-chev">&#9660;</span>
+        </div>
+        <div class="acc-body">
+          <div class="steps">
+            <div class="step"><div class="step-n">1</div><div class="step-t">Download the CSV file.</div></div>
+            <div class="step"><div class="step-n">2</div><div class="step-t">Go to <b>sheets.google.com</b> and create a new blank spreadsheet.</div></div>
+            <div class="step"><div class="step-n">3</div><div class="step-t">Click <b>File → Import</b>, then <b>Upload</b> and select your CSV file.</div></div>
+            <div class="step"><div class="step-n">4</div><div class="step-t">Choose <b>Replace spreadsheet</b> and click <b>Import data</b>.</div></div>
+          </div>
+          <div class="install-note">Google Sheets works on mobile too — great for reviewing your data on your phone.</div>
+        </div>
+      </div>
+
+      <div class="accordion" id="acc-numbers">
+        <div class="acc-head" onclick="toggleAcc('numbers')">
+          <span class="acc-title">Apple Numbers</span>
+          <span class="acc-tag">iPhone / iPad / Mac</span>
+          <span class="acc-chev">&#9660;</span>
+        </div>
+        <div class="acc-body">
+          <div class="steps">
+            <div class="step"><div class="step-n">1</div><div class="step-t">Download the CSV file to your device.</div></div>
+            <div class="step"><div class="step-n">2</div><div class="step-t">Find the file in the <b>Files app</b> (usually in Downloads).</div></div>
+            <div class="step"><div class="step-n">3</div><div class="step-t">Tap the file — it will open directly in <b>Numbers</b> automatically.</div></div>
+            <div class="step"><div class="step-n">4</div><div class="step-t">All your entries appear as a table. Tap any column header to sort.</div></div>
+          </div>
+          <div class="install-note">On iPhone, tap the share icon after opening to send the spreadsheet to someone.</div>
+        </div>
+      </div>
+
+      <div class="accordion" id="acc-jsonview">
+        <div class="acc-head" onclick="toggleAcc('jsonview')">
+          <span class="acc-title">JSON file</span>
+          <span class="acc-tag">Backup / Developers</span>
+          <span class="acc-chev">&#9660;</span>
+        </div>
+        <div class="acc-body">
+          <div class="steps">
+            <div class="step"><div class="step-n">1</div><div class="step-t">Download the JSON file using the button above.</div></div>
+            <div class="step"><div class="step-n">2</div><div class="step-t">Open it in any text editor (Notepad, VS Code, TextEdit) to view the raw data.</div></div>
+            <div class="step"><div class="step-n">3</div><div class="step-t">The file contains your entries and your current goals — useful as a backup.</div></div>
+            <div class="step"><div class="step-n">4</div><div class="step-t">To restore: copy the entries array, paste it into your browser console as <b>localStorage.setItem('st_entries', '...')</b>.</div></div>
+          </div>
+          <div class="install-note">JSON is the most complete export — it includes both your entries and your goal settings.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- WHAT'S INCLUDED NOTE -->
+    <div class="exp-note anim-child">
+      <div class="exp-note-title">What gets exported</div>
+      <p>The export includes all entries logged today: name, calories, protein, fat, carbs, fiber and sugar for each entry, plus your current daily goal settings. Data from previous days is not stored — Simple Tracker only keeps today's log.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     RESOURCES
+════════════════════════════════════════ -->
+<div class="page" id="page-resources">
+  <div class="page-blob page-blob-a"></div>
+  <div class="page-blob page-blob-b"></div>
+  <div class="inner">
+    <div class="page-heading anim-child">
+      <div class="eyebrow">Recipes &amp; Links</div>
+      <h2>Resources</h2>
+    </div>
+
+    <!-- RECIPE SECTION -->
+    <div class="section-title anim-child">High-protein recipes</div>
+    <p class="res-intro anim-child">Quick meals that hit your macros without overthinking it. Each card shows the approximate macros per serving.</p>
+
+    <div class="res-recipes anim-child">
+
+      <div class="res-recipe">
+        <div class="res-recipe-head">
+          <div class="res-recipe-name">Chicken &amp; Rice Bowl</div>
+          <div class="res-recipe-tag" style="color:var(--pro)">High protein</div>
+        </div>
+        <div class="res-recipe-macros">
+          <span class="res-mac" style="color:var(--cal)">~520 kcal</span>
+          <span class="res-mac" style="color:var(--pro)">48g protein</span>
+          <span class="res-mac" style="color:var(--carb)">52g carbs</span>
+          <span class="res-mac" style="color:var(--fat)">9g fat</span>
+        </div>
+        <div class="res-recipe-body">
+          <b>Ingredients (1 serving):</b> 150g chicken breast · 150g cooked white rice · 1 tbsp soy sauce · ½ tsp garlic powder · 1 tsp olive oil · handful of broccoli
+          <br><br>
+          <b>Method:</b> Season chicken with garlic powder and salt. Cook in olive oil 6–7 min per side until cooked through. Slice and serve over rice with soy sauce. Steam broccoli on the side.
+        </div>
+      </div>
+
+      <div class="res-recipe">
+        <div class="res-recipe-head">
+          <div class="res-recipe-name">Greek Yoghurt Protein Bowl</div>
+          <div class="res-recipe-tag" style="color:var(--carb)">Quick breakfast</div>
+        </div>
+        <div class="res-recipe-macros">
+          <span class="res-mac" style="color:var(--cal)">~380 kcal</span>
+          <span class="res-mac" style="color:var(--pro)">35g protein</span>
+          <span class="res-mac" style="color:var(--carb)">40g carbs</span>
+          <span class="res-mac" style="color:var(--fat)">6g fat</span>
+        </div>
+        <div class="res-recipe-body">
+          <b>Ingredients (1 serving):</b> 250g 0% Greek yoghurt · 40g oats · 1 scoop vanilla protein powder · 1 tbsp honey · handful of berries
+          <br><br>
+          <b>Method:</b> Mix yoghurt, oats and protein powder together. Top with berries and a drizzle of honey. Can be prepped the night before — just add the berries in the morning.
+        </div>
+      </div>
+
+      <div class="res-recipe">
+        <div class="res-recipe-head">
+          <div class="res-recipe-name">Tuna &amp; Avocado Rice Cakes</div>
+          <div class="res-recipe-tag" style="color:var(--fiber)">Low calorie</div>
+        </div>
+        <div class="res-recipe-macros">
+          <span class="res-mac" style="color:var(--cal)">~290 kcal</span>
+          <span class="res-mac" style="color:var(--pro)">28g protein</span>
+          <span class="res-mac" style="color:var(--carb)">22g carbs</span>
+          <span class="res-mac" style="color:var(--fat)">8g fat</span>
+        </div>
+        <div class="res-recipe-body">
+          <b>Ingredients (1 serving):</b> 1 can tuna in water (drained) · ½ avocado · 4 rice cakes · squeeze of lemon · salt &amp; pepper
+          <br><br>
+          <b>Method:</b> Mash avocado with lemon, salt and pepper. Mix tuna in separately. Spread avocado on rice cakes and top with tuna. Ready in under 5 minutes.
+        </div>
+      </div>
+
+      <div class="res-recipe">
+        <div class="res-recipe-head">
+          <div class="res-recipe-name">Egg White Omelette</div>
+          <div class="res-recipe-tag" style="color:var(--sugar)">Low carb</div>
+        </div>
+        <div class="res-recipe-macros">
+          <span class="res-mac" style="color:var(--cal)">~220 kcal</span>
+          <span class="res-mac" style="color:var(--pro)">32g protein</span>
+          <span class="res-mac" style="color:var(--carb)">4g carbs</span>
+          <span class="res-mac" style="color:var(--fat)">7g fat</span>
+        </div>
+        <div class="res-recipe-body">
+          <b>Ingredients (1 serving):</b> 5 egg whites · 1 whole egg · 50g spinach · 40g feta cheese · ½ tsp olive oil · salt &amp; pepper
+          <br><br>
+          <b>Method:</b> Whisk eggs together with salt and pepper. Heat oil in a pan, pour in eggs and cook on medium. Add spinach and feta when almost set, fold in half and serve.
+        </div>
+      </div>
+
+      <div class="res-recipe">
+        <div class="res-recipe-head">
+          <div class="res-recipe-name">Overnight Oats</div>
+          <div class="res-recipe-tag" style="color:var(--carb)">Meal prep</div>
+        </div>
+        <div class="res-recipe-macros">
+          <span class="res-mac" style="color:var(--cal)">~410 kcal</span>
+          <span class="res-mac" style="color:var(--pro)">25g protein</span>
+          <span class="res-mac" style="color:var(--carb)">55g carbs</span>
+          <span class="res-mac" style="color:var(--fat)">8g fat</span>
+        </div>
+        <div class="res-recipe-body">
+          <b>Ingredients (1 serving):</b> 70g rolled oats · 200ml milk (any) · 1 scoop protein powder · 1 tbsp peanut butter · 1 banana (sliced)
+          <br><br>
+          <b>Method:</b> Mix oats, milk and protein powder in a jar or container. Stir well, cover and refrigerate overnight. In the morning, top with peanut butter and banana slices.
+        </div>
+      </div>
+
+      <div class="res-recipe">
+        <div class="res-recipe-head">
+          <div class="res-recipe-name">Salmon &amp; Sweet Potato</div>
+          <div class="res-recipe-tag" style="color:var(--cal)">Balanced meal</div>
+        </div>
+        <div class="res-recipe-macros">
+          <span class="res-mac" style="color:var(--cal)">~540 kcal</span>
+          <span class="res-mac" style="color:var(--pro)">42g protein</span>
+          <span class="res-mac" style="color:var(--carb)">38g carbs</span>
+          <span class="res-mac" style="color:var(--fat)">22g fat</span>
+        </div>
+        <div class="res-recipe-body">
+          <b>Ingredients (1 serving):</b> 180g salmon fillet · 200g sweet potato · 1 tsp olive oil · lemon · garlic · salt &amp; pepper
+          <br><br>
+          <b>Method:</b> Dice sweet potato and roast at 200°C for 20 min with olive oil. Season salmon with garlic, salt and lemon. Pan fry skin-side down 4 min, flip 2 min. Serve together.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- WEBSITES SECTION -->
+    <div class="section-title anim-child" style="margin-top:36px;">Useful websites</div>
+    <p class="res-intro anim-child">Trusted sources for nutrition info, training plans, and calorie lookups. All free to use.</p>
+
+    <div class="res-links anim-child">
+
+      <div class="res-cat">
+        <div class="res-cat-label">Calorie &amp; Macro Lookup</div>
+        <a class="res-link" href="https://www.myfitnesspal.com" target="_blank" rel="noopener">
+          <div class="res-link-name">MyFitnessPal <span class="res-ext">↗</span></div>
+          <div class="res-link-desc">The biggest food database online. Search any food and see its full macro breakdown instantly.</div>
+        </a>
+        <a class="res-link" href="https://cronometer.com" target="_blank" rel="noopener">
+          <div class="res-link-name">Cronometer <span class="res-ext">↗</span></div>
+          <div class="res-link-desc">More detailed than most — shows micronutrients too. Great if you want to track vitamins and minerals.</div>
+        </a>
+        <a class="res-link" href="https://www.nutritionix.com" target="_blank" rel="noopener">
+          <div class="res-link-name">Nutritionix <span class="res-ext">↗</span></div>
+          <div class="res-link-desc">Huge database of restaurant and branded foods. Useful for looking up fast food macros.</div>
+        </a>
+      </div>
+
+      <div class="res-cat">
+        <div class="res-cat-label">Training &amp; Fitness</div>
+        <a class="res-link" href="https://www.muscleandstrength.com/workouts" target="_blank" rel="noopener">
+          <div class="res-link-name">Muscle &amp; Strength <span class="res-ext">↗</span></div>
+          <div class="res-link-desc">Hundreds of free workout plans for all levels — bulking, cutting, strength, beginner and advanced.</div>
+        </a>
+        <a class="res-link" href="https://www.reddit.com/r/fitness/wiki/index" target="_blank" rel="noopener">
+          <div class="res-link-name">r/Fitness Wiki <span class="res-ext">↗</span></div>
+          <div class="res-link-desc">Community-written fitness wiki with evidence-based beginner programs, FAQ and nutrition guides.</div>
+        </a>
+        <a class="res-link" href="https://exrx.net" target="_blank" rel="noopener">
+          <div class="res-link-name">ExRx.net <span class="res-ext">↗</span></div>
+          <div class="res-link-desc">Exercise library with instructions and form tips for every movement. Good for learning proper technique.</div>
+        </a>
+      </div>
+
+      <div class="res-cat">
+        <div class="res-cat-label">Weight Loss &amp; Dieting</div>
+        <a class="res-link" href="https://tdeecalculator.net" target="_blank" rel="noopener">
+          <div class="res-link-name">TDEE Calculator <span class="res-ext">↗</span></div>
+          <div class="res-link-desc">Find your Total Daily Energy Expenditure — how many calories you burn per day based on your stats and activity level.</div>
+        </a>
+        <a class="res-link" href="https://www.healthline.com/nutrition" target="_blank" rel="noopener">
+          <div class="res-link-name">Healthline Nutrition <span class="res-ext">↗</span></div>
+          <div class="res-link-desc">Evidence-based nutrition articles reviewed by dietitians. Good for understanding macros, diets and food science.</div>
+        </a>
+        <a class="res-link" href="https://examine.com" target="_blank" rel="noopener">
+          <div class="res-link-name">Examine.com <span class="res-ext">↗</span></div>
+          <div class="res-link-desc">Unbiased supplement and nutrition research summaries. Find out what actually works based on studies.</div>
+        </a>
+      </div>
+
+      <div class="res-cat">
+        <div class="res-cat-label">More Recipes</div>
+        <a class="res-link" href="https://www.bbcgoodfood.com/recipes/collection/high-protein-recipes" target="_blank" rel="noopener">
+          <div class="res-link-name">BBC Good Food — High Protein <span class="res-ext">↗</span></div>
+          <div class="res-link-desc">Hundreds of high-protein recipes with full nutritional info. Reliable, well-tested and easy to follow.</div>
+        </a>
+        <a class="res-link" href="https://www.skinnytaste.com" target="_blank" rel="noopener">
+          <div class="res-link-name">Skinnytaste <span class="res-ext">↗</span></div>
+          <div class="res-link-desc">Lighter versions of popular recipes with full macro breakdowns. Great for weight loss without giving up good food.</div>
+        </a>
+        <a class="res-link" href="https://www.mealprepping.com" target="_blank" rel="noopener">
+          <div class="res-link-name">MealPrepping.com <span class="res-ext">↗</span></div>
+          <div class="res-link-desc">Meal prep ideas, guides and recipes for cooking in bulk so you always have macro-friendly food ready.</div>
+        </a>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
